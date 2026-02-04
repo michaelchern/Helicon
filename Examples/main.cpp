@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 
 #include "Codegen/ControlFlows.h"
 
@@ -23,198 +23,199 @@ using namespace EmbeddedShader;
 
 struct VertexInput
 {
-	Float3 inPosition;
-	Float3 inNormal;
-	Float2 inTexCoord;
-	Float3 inColor;
+    Float3 inPosition;
+    Float3 inNormal;
+    Float2 inTexCoord;
+    Float3 inColor;
 };
 
 struct VertexOutput
 {
-	Float3 fragPos;
-	Float3 fragNormal;
-	Float2 fragTexCoord;
-	Float3 fragColor;
+    Float3 fragPos;
+    Float3 fragNormal;
+    Float2 fragTexCoord;
+    Float3 fragColor;
 };
 
 struct TextureStruct
 {
-	Texture2D<ktm::fvec4> texture;
-	Sampler sampler;
+    Texture2D<ktm::fvec4> texture;
+    Sampler sampler;
 };
 
 struct ImageStruct
 {
-	Texture2D<ktm::fvec4> image;
+    Texture2D<ktm::fvec4> image;
 };
 
 int main(int argc, char* argv[])
 {
-	using namespace EmbeddedShader::Ast;
-	using namespace ktm;
+    using namespace EmbeddedShader::Ast;
+    using namespace ktm;
 
-	Float4x4 model;
-	Float3x3 modelInverse;
-	Float4x4 view;
-	Float4x4 proj;
-	Float3 viewPos;
-	Float3 lightColor;
-	Float3 lightPos;
-	auto vertex = [&](Aggregate<VertexInput> input)
-	{
-		Aggregate<VertexOutput> output;
-		position() = mul(mul(mul(proj,view),model),Float4(input->inPosition,1.0));
-		output->fragPos = mul(model,Float4(input->inPosition,1.0))->xyz();
-		output->fragNormal = normalize(mul(modelInverse,input->inNormal));
-		output->fragColor = input->inColor;
-		output->fragTexCoord = input->inTexCoord;
-		return output;
-	};
+    Float4x4 model;
+    Float3x3 modelInverse;
+    Float4x4 view;
+    Float4x4 proj;
+    Float3 viewPos;
+    Float3 lightColor;
+    Float3 lightPos;
 
-	Aggregate<TextureStruct> textureStruct;
+    auto vertex = [&](Aggregate<VertexInput> input)
+    {
+        Aggregate<VertexOutput> output;
+        position() = mul(mul(mul(proj,view),model),Float4(input->inPosition,1.0));
+        output->fragPos = mul(model,Float4(input->inPosition,1.0))->xyz();
+        output->fragNormal = normalize(mul(modelInverse,input->inNormal));
+        output->fragColor = input->inColor;
+        output->fragTexCoord = input->inTexCoord;
+        return output;
+    };
 
-	auto DistributionGGX = [&](const Float3& N, const Float3& H,Float roughness)
-	{
-		Float a = roughness * roughness;
-		Float a2 = a * a;
-		Float NdotH = max(dot(N,H),0.0f);
-		Float NdotH2 = NdotH * NdotH;
+    Aggregate<TextureStruct> textureStruct;
 
-		Float nom = a2;
-		Float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-		denom = 3.14159265359f * denom * denom;
+    auto DistributionGGX = [&](const Float3& N, const Float3& H,Float roughness)
+    {
+        Float a = roughness * roughness;
+        Float a2 = a * a;
+        Float NdotH = max(dot(N,H),0.0f);
+        Float NdotH2 = NdotH * NdotH;
 
-		return nom / denom;
-	};
+        Float nom = a2;
+        Float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+        denom = 3.14159265359f * denom * denom;
 
-	auto GeometrySchlickGGX = [&](Float NdotV, const Float& roughness)
-	{
-		Float r = (roughness + 1.0f);
-		Float k = (r * r) / 8.0f;
+        return nom / denom;
+    };
 
-		Float nom = NdotV;
-		Float denom = NdotV * (1.0f - k) + k;
+    auto GeometrySchlickGGX = [&](Float NdotV, const Float& roughness)
+    {
+        Float r = (roughness + 1.0f);
+        Float k = (r * r) / 8.0f;
 
-		return nom / denom;
-	};
+        Float nom = NdotV;
+        Float denom = NdotV * (1.0f - k) + k;
 
-	auto GeometrySmith = [&](const Float3& N, const Float3& V, const Float3& L, const Float& roughness)
-	{
-		Float NdotV = max(dot(N, V), 0.0f);
-		Float NdotL = max(dot(N, L), 0.0f);
-		Float ggx2 = GeometrySchlickGGX(NdotV, roughness);
-		Float ggx1 = GeometrySchlickGGX(NdotL, roughness);
+        return nom / denom;
+    };
 
-		return ggx1 * ggx2;
-	};
+    auto GeometrySmith = [&](const Float3& N, const Float3& V, const Float3& L, const Float& roughness)
+    {
+        Float NdotV = max(dot(N, V), 0.0f);
+        Float NdotL = max(dot(N, L), 0.0f);
+        Float ggx2 = GeometrySchlickGGX(NdotV, roughness);
+        Float ggx1 = GeometrySchlickGGX(NdotL, roughness);
 
-	auto fresnelSchlick = [&](const Float& cosTheta, const Float3& F0)
-	{
-		return F0 + (fvec3(1) - F0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);
-	};
+        return ggx1 * ggx2;
+    };
 
-	auto calculateColor = [&](const Float3& WorldPos,const Float3& Normal,const Float3& albedo,const Float& metallic, const Float& roughness)
-	{
-		auto N = normalize(Normal);
-		auto V = normalize(viewPos - WorldPos);
+    auto fresnelSchlick = [&](const Float& cosTheta, const Float3& F0)
+    {
+        return F0 + (fvec3(1) - F0) * pow(clamp(1.0f - cosTheta, 0.0f, 1.0f), 5.0f);
+    };
 
-		Float3 F0 = fvec3(0.04f);
-		F0 = mix(F0, albedo, metallic);
-		Float3 Lo = fvec3(0);
+    auto calculateColor = [&](const Float3& WorldPos,const Float3& Normal,const Float3& albedo,const Float& metallic, const Float& roughness)
+    {
+        auto N = normalize(Normal);
+        auto V = normalize(viewPos - WorldPos);
 
-		Float3 L = normalize(lightPos - WorldPos);
-		Float3 H = normalize(V + L);
-		Float attenuation = 1.0;
-		Float3 radiance = lightColor * attenuation;
+        Float3 F0 = fvec3(0.04f);
+        F0 = mix(F0, albedo, metallic);
+        Float3 Lo = fvec3(0);
 
-		Float NDF = DistributionGGX(N,H,roughness);
-		Float G = GeometrySmith(N,V,L,roughness);
-		Float3 F = fresnelSchlick(clamp(dot(H,V),0.f,1.f),F0);
+        Float3 L = normalize(lightPos - WorldPos);
+        Float3 H = normalize(V + L);
+        Float attenuation = 1.0;
+        Float3 radiance = lightColor * attenuation;
 
-		Float3 numerator = NDF * G * F;
-		Float denominator = 4.0f * max(dot(N, V), 0.0f) * max(dot(N, L), 0.0f) + 0.0001;
-		Float3 specular = numerator / denominator;
+        Float NDF = DistributionGGX(N,H,roughness);
+        Float G = GeometrySmith(N,V,L,roughness);
+        Float3 F = fresnelSchlick(clamp(dot(H,V),0.f,1.f),F0);
 
-		auto kS = F;
-		auto kD = fvec3(1.f) - kS;
-		kD *= 1.f - metallic;
+        Float3 numerator = NDF * G * F;
+        Float denominator = 4.0f * max(dot(N, V), 0.0f) * max(dot(N, L), 0.0f) + 0.0001;
+        Float3 specular = numerator / denominator;
 
-		Float NdotL = max(dot(N, L), 0.0f);
-		Lo += (kD * albedo / Float{3.14159265359f} + specular) * radiance * NdotL;
+        auto kS = F;
+        auto kD = fvec3(1.f) - kS;
+        kD *= 1.f - metallic;
 
-		Float3 ambient = fvec3(0.03) * albedo;
-		return ambient + Lo;
-	};
+        Float NdotL = max(dot(N, L), 0.0f);
+        Lo += (kD * albedo / Float{3.14159265359f} + specular) * radiance * NdotL;
 
-	auto fragment = [&](Aggregate<VertexOutput> input)
-	{
-		Float4 color = textureStruct->texture.sample(textureStruct->sampler,input->fragTexCoord);
-		Float3 albedo;
-		$IF(color->w > 0.01)
-			albedo = color->xyz();
-		$ELSE
-			albedo = input->fragColor;
-		Float4 outColor = Float4(calculateColor(input->fragPos,input->fragNormal,albedo,0.5,0.5),1.0);
-		return outColor;
-	};
+        Float3 ambient = fvec3(0.03) * albedo;
+        return ambient + Lo;
+    };
 
-	Texture2D<fvec4> inputImageRGBA16;
+    auto fragment = [&](Aggregate<VertexOutput> input)
+    {
+        Float4 color = textureStruct->texture.sample(textureStruct->sampler,input->fragTexCoord);
+        Float3 albedo;
+        $IF(color->w > 0.01)
+            albedo = color->xyz();
+        $ELSE
+            albedo = input->fragColor;
+        Float4 outColor = Float4(calculateColor(input->fragPos,input->fragNormal,albedo,0.5,0.5),1.0);
+        return outColor;
+    };
 
-	auto acesFilmicToneMapCurve = [&](Float3 x)
-	{
-		Float a = 2.51f;
-		Float b = 0.03f;
-		Float c = 2.43f;
-		Float d = 0.59f;
-		Float e = 0.14f;
+    Texture2D<fvec4> inputImageRGBA16;
 
-		return clamp((x * (a * x + b)) / (x * (c * x + d) + e), fvec3(0.0f), fvec3(1.0f));
-	};
+    auto acesFilmicToneMapCurve = [&](Float3 x)
+    {
+        Float a = 2.51f;
+        Float b = 0.03f;
+        Float c = 2.43f;
+        Float d = 0.59f;
+        Float e = 0.14f;
 
-	auto acesFilmicToneMapInverse = [&](const Float3& x)
-	{
-		Float3 a = fvec3(-0.59f) * x + fvec3(0.03f);
-		Float3 b = sqrt(fvec3(-1.0127f) * x * x + fvec3(1.3702f) * x + fvec3(0.0009));
-		Float3 c = fvec3(2) * (fvec3(2.43f) * x - fvec3(2.51f));
-		return ((a - b) / c);
-	};
+        return clamp((x * (a * x + b)) / (x * (c * x + d) + e), fvec3(0.0f), fvec3(1.0f));
+    };
 
-	auto compute = [&]
-	{
-		Float4 color = inputImageRGBA16[dispatchThreadID()->xy()];
-		inputImageRGBA16[dispatchThreadID()->xy()] = Float4(acesFilmicToneMapCurve(color->xyz()),1.f);
-	};
+    auto acesFilmicToneMapInverse = [&](const Float3& x)
+    {
+        Float3 a = fvec3(-0.59f) * x + fvec3(0.03f);
+        Float3 b = sqrt(fvec3(-1.0127f) * x * x + fvec3(1.3702f) * x + fvec3(0.0009));
+        Float3 c = fvec3(2) * (fvec3(2.43f) * x - fvec3(2.51f));
+        return ((a - b) / c);
+    };
 
-	CompilerOption compilerOption = {};
-	compilerOption.compileHLSL = false;
-	compilerOption.compileDXIL = true;
-	compilerOption.compileDXBC = true;
-	compilerOption.compileGLSL = true;
-	compilerOption.enableBindless = true;
+    auto compute = [&]
+    {
+        Float4 color = inputImageRGBA16[dispatchThreadID()->xy()];
+        inputImageRGBA16[dispatchThreadID()->xy()] = Float4(acesFilmicToneMapCurve(color->xyz()),1.f);
+    };
 
-	auto rasterizedPipeline = RasterizedPipelineObject::compile(vertex, fragment,compilerOption);
-	auto computePipeline = ComputePipelineObject::compile(compute,uvec3(8,8,1),compilerOption);
-	puts(std::get<1>(rasterizedPipeline.vertex->getShaderCode(ShaderLanguage::Slang).shaderCode).c_str());
-	puts(std::get<1>(rasterizedPipeline.fragment->getShaderCode(ShaderLanguage::Slang).shaderCode).c_str());
-	puts(std::get<1>(computePipeline.compute->getShaderCode(ShaderLanguage::Slang).shaderCode).c_str());
+    CompilerOption compilerOption = {};
+    compilerOption.compileHLSL = false;
+    compilerOption.compileDXIL = true;
+    compilerOption.compileDXBC = true;
+    compilerOption.compileGLSL = true;
+    compilerOption.enableBindless = true;
 
-	//puts(std::get<1>(rasterizedPipeline.vertex->getShaderCode(ShaderLanguage::GLSL,true).shaderCode).c_str());
+    auto rasterizedPipeline = RasterizedPipelineObject::compile(vertex, fragment,compilerOption);
+    auto computePipeline = ComputePipelineObject::compile(compute,uvec3(8,8,1),compilerOption);
+    puts(std::get<1>(rasterizedPipeline.vertex->getShaderCode(ShaderLanguage::Slang).shaderCode).c_str());
+    puts(std::get<1>(rasterizedPipeline.fragment->getShaderCode(ShaderLanguage::Slang).shaderCode).c_str());
+    puts(std::get<1>(computePipeline.compute->getShaderCode(ShaderLanguage::Slang).shaderCode).c_str());
 
-	std::string slangTest = R"(
+    //puts(std::get<1>(rasterizedPipeline.vertex->getShaderCode(ShaderLanguage::GLSL,true).shaderCode).c_str());
+
+    std::string slangTest = R"(
 
 
 struct Data
 {
-	float2 coord;
+    float2 coord;
 };
 
 struct ParameterBlockData
 {
-	ConstantBuffer<Data>.Handle data;
-	Texture2D.Handle texture;
-	SamplerState.Handle sampler;
-	RWTexture2D<uint2>.Handle inImage;
-	RWTexture2D<float4>.Handle outImage;
+    ConstantBuffer<Data>.Handle data;
+    Texture2D.Handle texture;
+    SamplerState.Handle sampler;
+    RWTexture2D<uint2>.Handle inImage;
+    RWTexture2D<float4>.Handle outImage;
 };
 
 ParameterBlock<ParameterBlockData> data;
@@ -225,7 +226,7 @@ float4 main() : SV_TARGET0
     return data.texture.Sample(data.sampler,(*(data.data)).coord) * data.outImage[data.inImage[uint2(0,0)]];
 })";
 
-	/*[vk::binding(0, 1)]
+    /*[vk::binding(0, 1)]
 __DynamicResource<__DynamicResourceKind.Sampler> samplerHandles[];
 
 [vk::binding(0, 2)]
@@ -245,51 +246,51 @@ __DynamicResource<__DynamicResourceKind.General> texelBufferHandles[];
 
 export T getDescriptorFromHandle<T>(DescriptorHandle<T> handle) where T : IOpaqueDescriptor
 {
-	__target_switch
-	{
-	case spirv:
-	case glsl:
-		if (T.kind == DescriptorKind.Sampler)
-			return samplerHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
-		else if (T.kind == DescriptorKind.Texture)
-			return textureHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
-		else if (T.kind == DescriptorKind.Buffer)
-			return bufferHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
-		else if (T.kind == DescriptorKind.CombinedTextureSampler)
-			return combinedTextureSamplerHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
-		else if (T.kind == DescriptorKind.AccelerationStructure)
-			return accelerationStructureHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
-		else if (T.kind == DescriptorKind.TexelBuffer)
-			return texelBufferHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
-		else
-			return defaultGetDescriptorFromHandle(handle);
-	default:
-		return defaultGetDescriptorFromHandle(handle);
-	}
+    __target_switch
+    {
+    case spirv:
+    case glsl:
+        if (T.kind == DescriptorKind.Sampler)
+            return samplerHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
+        else if (T.kind == DescriptorKind.Texture)
+            return textureHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
+        else if (T.kind == DescriptorKind.Buffer)
+            return bufferHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
+        else if (T.kind == DescriptorKind.CombinedTextureSampler)
+            return combinedTextureSamplerHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
+        else if (T.kind == DescriptorKind.AccelerationStructure)
+            return accelerationStructureHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
+        else if (T.kind == DescriptorKind.TexelBuffer)
+            return texelBufferHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
+        else
+            return defaultGetDescriptorFromHandle(handle);
+    default:
+        return defaultGetDescriptorFromHandle(handle);
+    }
 }*/
 
-	// std::vector<std::vector<uint32_t>> binaryOutputs;
+    // std::vector<std::vector<uint32_t>> binaryOutputs;
  //    std::vector<std::string> outputs;
  //    ShaderLanguageConverter::slangCompiler(slangTest, {ShaderLanguage::SpirV}, {ShaderLanguage::GLSL}, binaryOutputs, outputs, true);
  //    //puts(outputs[0].c_str());
  //
-	// ShaderLanguageConverter::glslangSpirvCompiler(outputs[0], ShaderLanguage::GLSL, ::ShaderStage::FragmentShader);
+    // ShaderLanguageConverter::glslangSpirvCompiler(outputs[0], ShaderLanguage::GLSL, ::ShaderStage::FragmentShader);
 
-	system("clear");
-	Texture2D<fvec4> image;
-	Texture2D<fvec4> image2;
-	auto testShader = [&]
-	{
-		image[Uint2(0,0)] = image2[Uint2(0,0)];
-	};
-	compilerOption.compileDXBC = false;
-	compilerOption.compileDXIL = false;
-	compilerOption.compileHLSL = false;
-	compilerOption.compileGLSL = true;
-	compilerOption.compileSpirV = true;
-	compilerOption.enableBindless = true;
-	auto testPipeline = ComputePipelineObject::compile(testShader,uvec3(8,8,1),compilerOption);
-	puts(std::get<1>(testPipeline.compute->getShaderCode(ShaderLanguage::Slang).shaderCode).c_str());
-	puts(std::get<1>(testPipeline.compute->getShaderCode(ShaderLanguage::GLSL,true).shaderCode).c_str());
-	std::cout << textureStruct->texture.node->accessPath();
+    system("clear");
+    Texture2D<fvec4> image;
+    Texture2D<fvec4> image2;
+    auto testShader = [&]
+    {
+        image[Uint2(0,0)] = image2[Uint2(0,0)];
+    };
+    compilerOption.compileDXBC = false;
+    compilerOption.compileDXIL = false;
+    compilerOption.compileHLSL = false;
+    compilerOption.compileGLSL = true;
+    compilerOption.compileSpirV = true;
+    compilerOption.enableBindless = true;
+    auto testPipeline = ComputePipelineObject::compile(testShader,uvec3(8,8,1),compilerOption);
+    puts(std::get<1>(testPipeline.compute->getShaderCode(ShaderLanguage::Slang).shaderCode).c_str());
+    puts(std::get<1>(testPipeline.compute->getShaderCode(ShaderLanguage::GLSL,true).shaderCode).c_str());
+    std::cout << textureStruct->texture.node->accessPath();
 }
