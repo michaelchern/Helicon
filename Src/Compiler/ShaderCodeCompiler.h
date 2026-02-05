@@ -1,12 +1,12 @@
-#pragma once
+﻿#pragma once
 
 #include <cstdint>
+#include <mutex>
 #include <source_location>
 #include <string>
 #include <unordered_map>
 #include <variant>
 #include <vector>
-#include <mutex>
 
 namespace EmbeddedShader
 {
@@ -35,6 +35,9 @@ namespace EmbeddedShader
     };
 
     std::string enumToString(ShaderStage stage);
+
+    // Helicon 通过全面的反射系统自动提取和管理着色器资源绑定。ShaderCodeModule 中的 ShaderResources 结构捕获有关着色器输入、输出、uniform 缓冲区、纹理、采样器、存储缓冲区和 push constants 的详细信息。
+    // 资源绑定按 BindType 分类，包括用于接口匹配的阶段输入和输出、用于参数传递的 uniform 缓冲区和 push constants，以及用于数据访问的各种图像和缓冲区类型。每个绑定都包含元数据，例如描述集编号、绑定位置、类型信息、元素计数和字节偏移量。此反射数据能够在着色器阶段之间自动生成和验证资源布局。
 
     struct ShaderCodeModule
     {
@@ -138,13 +141,11 @@ namespace EmbeddedShader
         // ShaderCodeCompiler(const std::string &shaderCode, ShaderStage inputStage, ShaderLanguage language = ShaderLanguage::GLSL, const std::source_location &sourceLocation = std::source_location::current());
         // ShaderCodeCompiler(const std::vector<uint32_t> &shaderCode, ShaderStage inputStage, ShaderLanguage language = ShaderLanguage::GLSL, const std::source_location &sourceLocation = std::source_location::current());
 
-
-
         ShaderCodeCompiler(const std::string &shaderCode, ShaderStage inputStage, ShaderLanguage language = ShaderLanguage::GLSL, CompilerOption option = {}, const std::source_location &sourceLocation = std::source_location::current());
         ~ShaderCodeCompiler() = default;
 
         [[nodiscard]] ShaderCodeModule getShaderCode(ShaderLanguage language, bool bindless = false) const;
-        void compile(const std::string& shaderCode, ShaderStage inputStage, ShaderLanguage language = ShaderLanguage::GLSL, CompilerOption option = {}) const;
+        void compile(const std::string &shaderCode, ShaderStage inputStage, ShaderLanguage language = ShaderLanguage::GLSL, CompilerOption option = {}) const;
     private:
         std::string sourceLocationStr;
         std::string stage;

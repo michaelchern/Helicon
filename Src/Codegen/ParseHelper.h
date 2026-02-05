@@ -1,7 +1,8 @@
 ﻿#pragma once
+
+#include <Codegen/AST/Node.hpp>
 #include <functional>
 #include <stack>
-#include <Codegen/AST/Node.hpp>
 
 namespace EmbeddedShader
 {

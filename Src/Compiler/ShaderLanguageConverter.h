@@ -1,4 +1,4 @@
-#pragma once
+Ôªø#pragma once
 
 #include <optional>
 
@@ -10,38 +10,38 @@
 
 namespace EmbeddedShader
 {
-	// ∫Ø ˝≤Œ ˝–≈œ¢
-	struct FunctionParameter
-	{
-		std::string name;
-		std::string typeName;
-		uint32_t typeId = 0;
-	};
+    // ÂáΩÊï∞ÂèÇÊï∞‰ø°ÊÅØ
+    struct FunctionParameter
+    {
+        std::string name;
+        std::string typeName;
+        uint32_t typeId = 0;
+    };
 
-	// ∫Ø ˝«©√˚–≈œ¢
-	struct FunctionSignature
-	{
-		std::string name;
-		std::string returnTypeName;
-		uint32_t returnTypeId = 0;
-		std::vector<FunctionParameter> parameters;
-		bool isEntryPoint = false;
-	};
+    // ÂáΩÊï∞Á≠æÂêç‰ø°ÊÅØ
+    struct FunctionSignature
+    {
+        std::string name;
+        std::string returnTypeName;
+        uint32_t returnTypeId = 0;
+        std::vector<FunctionParameter> parameters;
+        bool isEntryPoint = false;
+    };
 
-	struct ShaderLanguageConverter
-	{
-		// Compile HLSL or GLSL to SPIR-V.
-		static std::vector<uint32_t> glslangSpirvCompiler(std::string shaderCode, ShaderLanguage inputLanguage, ShaderStage inputStage);
+    struct ShaderLanguageConverter
+    {
+        // Compile HLSL or GLSL to SPIR-V.
+        static std::vector<uint32_t> glslangSpirvCompiler(std::string shaderCode, ShaderLanguage inputLanguage, ShaderStage inputStage);
 
-		//Compile SPIR-V to others
-		static std::string spirvCrossConverter(std::vector<uint32_t> spirv_file, ShaderLanguage targetLanguage, int32_t targetVersion = -1);
+        //Compile SPIR-V to others
+        static std::string spirvCrossConverter(std::vector<uint32_t> spirv_file, ShaderLanguage targetLanguage, int32_t targetVersion = -1);
 
-		// Õ®π˝SPIRV-Cross IR≤„ªÒ»°∫Ø ˝«©√˚
-		static std::vector<FunctionSignature> spirvCrossGetFunctionSignatures(const std::vector<uint32_t>& spirv_file);
+        // ÈÄöËøáSPIRV-Cross IRÂ±ÇËé∑ÂèñÂáΩÊï∞Á≠æÂêç
+        static std::vector<FunctionSignature> spirvCrossGetFunctionSignatures(const std::vector<uint32_t>& spirv_file);
 
-		// Compile Slang to others
-		static std::string slangCompiler(std::string shaderCode, ShaderLanguage targetLanguage, Slang::ComPtr<slang::IComponentType>& program);
-		static std::vector<ShaderCodeModule::ShaderResources> slangCompiler(
+        // Compile Slang to others
+        static std::string slangCompiler(std::string shaderCode, ShaderLanguage targetLanguage, Slang::ComPtr<slang::IComponentType>& program);
+        static std::vector<ShaderCodeModule::ShaderResources> slangCompiler(
             const std::string &shaderCode,
             const std::vector<ShaderLanguage> &targetBinary,
             const std::vector<ShaderLanguage> &targetLanguage,
@@ -49,19 +49,19 @@ namespace EmbeddedShader
             std::vector<std::string> &targetsOutput,
             bool isEnabledReflection);
 
-		static std::vector<uint32_t> slangSpirvCompiler(const std::string& shaderCode, Slang::ComPtr<slang::IComponentType>& program);
+        static std::vector<uint32_t> slangSpirvCompiler(const std::string& shaderCode, Slang::ComPtr<slang::IComponentType>& program);
 #ifdef WIN32
-		static std::vector<uint32_t> dxilCompiler(const std::string& hlslShader, ShaderStage stage);
-		static std::vector<uint32_t> dxbcCompiler(const std::string& hlslShader, ShaderStage stage);
+        static std::vector<uint32_t> dxilCompiler(const std::string& hlslShader, ShaderStage stage);
+        static std::vector<uint32_t> dxbcCompiler(const std::string& hlslShader, ShaderStage stage);
 #endif
 
-		//get Reflected Bind Info
-		static ShaderCodeModule::ShaderResources spirvCrossReflectedBindInfo(std::vector<uint32_t> spirv_file, ShaderLanguage targetLanguage = ShaderLanguage::GLSL, int32_t targetVersion = 330);
+        //get Reflected Bind Info
+        static ShaderCodeModule::ShaderResources spirvCrossReflectedBindInfo(std::vector<uint32_t> spirv_file, ShaderLanguage targetLanguage = ShaderLanguage::GLSL, int32_t targetVersion = 330);
 
-		//static ShaderCodeModule::ShaderResources slangReflectedBindInfo(const std::string& shaderCode);
-	private:
-		static void slangReflectField(slang::VariableLayoutReflection* field, std::string_view accessPath, size_t varBaseOffset, ShaderCodeModule::ShaderResources& reflection);
-		static void slangReflectParameterBlock(slang::ProgramLayout* program, std::string_view uboName, ShaderCodeModule::ShaderResources& reflection);
-		static void slangReflectDescriptor(slang::VariableLayoutReflection* var, int set, std::string_view name, size_t varBaseOffset, ShaderCodeModule::ShaderResources& resource);
-	};
+        //static ShaderCodeModule::ShaderResources slangReflectedBindInfo(const std::string& shaderCode);
+    private:
+        static void slangReflectField(slang::VariableLayoutReflection* field, std::string_view accessPath, size_t varBaseOffset, ShaderCodeModule::ShaderResources& reflection);
+        static void slangReflectParameterBlock(slang::ProgramLayout* program, std::string_view uboName, ShaderCodeModule::ShaderResources& reflection);
+        static void slangReflectDescriptor(slang::VariableLayoutReflection* var, int set, std::string_view name, size_t varBaseOffset, ShaderCodeModule::ShaderResources& resource);
+    };
 }

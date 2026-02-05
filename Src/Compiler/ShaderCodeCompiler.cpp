@@ -1,5 +1,4 @@
-
-#include "ShaderCodeCompiler.h"
+﻿#include "ShaderCodeCompiler.h"
 
 #include <slang-com-helper.h>
 #include <slang-com-ptr.h>
@@ -11,6 +10,7 @@
 #include "ShaderLanguageConverter.h"
 #include <shared_mutex>
 
+// ShaderCodeCompiler 管理单个着色器阶段的编译生命周期。它接受各种语言的着色器源代码，应用编译选项，并生成包含编译后的二进制或源代码以及资源反射信息的 ShaderCodeModule 对象。编译器支持查询方法，以检索不同语言的编译代码，用于测试或交叉编译场景。
 
 namespace EmbeddedShader
 {

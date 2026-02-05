@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 
 #include <SPIRV/GlslangToSpv.h>
 #include <glslang/Public/ResourceLimits.h>
@@ -23,6 +23,8 @@
 #include <d3dcompiler.h>
 #pragma comment(lib, "d3dcompiler.lib")
 #endif
+
+// ShaderLanguageConverter 提供静态方法，用于在没有管道对象开销的情况下进行着色器语言之间的转换。它包括使用 glslang 将 HLSL/GLSL 编译为 SPIR-V、使用 SPIRV-Cross 将 SPIR-V 转换为高级语言、编译 Slang 代码以及提取函数签名以实现跨语言 include 功能的函数。
 
 namespace EmbeddedShader
 {

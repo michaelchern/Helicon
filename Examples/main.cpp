@@ -13,9 +13,9 @@
 #include <ktm/type/vec.h>
 #include <utility>
 
-#include <Codegen/RasterizedPipelineObject.h>
 #include <Codegen/BuiltinVariate.h>
 #include <Codegen/ComputePipelineObject.h>
+#include <Codegen/RasterizedPipelineObject.h>
 #include <Codegen/TypeAlias.h>
 #include <Compiler/ShaderHardcodeManager.h>
 
@@ -202,79 +202,78 @@ int main(int argc, char* argv[])
     //puts(std::get<1>(rasterizedPipeline.vertex->getShaderCode(ShaderLanguage::GLSL,true).shaderCode).c_str());
 
     std::string slangTest = R"(
+    struct Data
+    {
+        float2 coord;
+    };
 
+    struct ParameterBlockData
+    {
+        ConstantBuffer<Data>.Handle data;
+        Texture2D.Handle texture;
+        SamplerState.Handle sampler;
+        RWTexture2D<uint2>.Handle inImage;
+        RWTexture2D<float4>.Handle outImage;
+    };
 
-struct Data
-{
-    float2 coord;
-};
+    ParameterBlock<ParameterBlockData> data;
 
-struct ParameterBlockData
-{
-    ConstantBuffer<Data>.Handle data;
-    Texture2D.Handle texture;
-    SamplerState.Handle sampler;
-    RWTexture2D<uint2>.Handle inImage;
-    RWTexture2D<float4>.Handle outImage;
-};
-
-ParameterBlock<ParameterBlockData> data;
-
-[shader("fragment")]
-float4 main() : SV_TARGET0
-{
-    return data.texture.Sample(data.sampler,(*(data.data)).coord) * data.outImage[data.inImage[uint2(0,0)]];
-})";
+    [shader("fragment")]
+    float4 main() : SV_TARGET0
+    {
+        return data.texture.Sample(data.sampler,(*(data.data)).coord) * data.outImage[data.inImage[uint2(0,0)]];
+    }
+    )";
 
     /*[vk::binding(0, 1)]
-__DynamicResource<__DynamicResourceKind.Sampler> samplerHandles[];
+    __DynamicResource<__DynamicResourceKind.Sampler> samplerHandles[];
 
-[vk::binding(0, 2)]
-__DynamicResource<__DynamicResourceKind.General> textureHandles[];
+    [vk::binding(0, 2)]
+    __DynamicResource<__DynamicResourceKind.General> textureHandles[];
 
-[vk::binding(0, 3)]
-__DynamicResource<__DynamicResourceKind.General> bufferHandles[];
+    [vk::binding(0, 3)]
+    __DynamicResource<__DynamicResourceKind.General> bufferHandles[];
 
-[vk::binding(0, 4)]
-__DynamicResource<__DynamicResourceKind.General> combinedTextureSamplerHandles[];
+    [vk::binding(0, 4)]
+    __DynamicResource<__DynamicResourceKind.General> combinedTextureSamplerHandles[];
 
-[vk::binding(0, 5)]
-__DynamicResource<__DynamicResourceKind.General> accelerationStructureHandles[];
+    [vk::binding(0, 5)]
+    __DynamicResource<__DynamicResourceKind.General> accelerationStructureHandles[];
 
-[vk::binding(0, 6)]
-__DynamicResource<__DynamicResourceKind.General> texelBufferHandles[];
+    [vk::binding(0, 6)]
+    __DynamicResource<__DynamicResourceKind.General> texelBufferHandles[];
 
-export T getDescriptorFromHandle<T>(DescriptorHandle<T> handle) where T : IOpaqueDescriptor
-{
-    __target_switch
+    export T getDescriptorFromHandle<T>(DescriptorHandle<T> handle) where T : IOpaqueDescriptor
     {
-    case spirv:
-    case glsl:
-        if (T.kind == DescriptorKind.Sampler)
-            return samplerHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
-        else if (T.kind == DescriptorKind.Texture)
-            return textureHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
-        else if (T.kind == DescriptorKind.Buffer)
-            return bufferHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
-        else if (T.kind == DescriptorKind.CombinedTextureSampler)
-            return combinedTextureSamplerHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
-        else if (T.kind == DescriptorKind.AccelerationStructure)
-            return accelerationStructureHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
-        else if (T.kind == DescriptorKind.TexelBuffer)
-            return texelBufferHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
-        else
+        __target_switch
+        {
+        case spirv:
+        case glsl:
+            if (T.kind == DescriptorKind.Sampler)
+                return samplerHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
+            else if (T.kind == DescriptorKind.Texture)
+                return textureHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
+            else if (T.kind == DescriptorKind.Buffer)
+                return bufferHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
+            else if (T.kind == DescriptorKind.CombinedTextureSampler)
+                return combinedTextureSamplerHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
+            else if (T.kind == DescriptorKind.AccelerationStructure)
+                return accelerationStructureHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
+            else if (T.kind == DescriptorKind.TexelBuffer)
+                return texelBufferHandles[((uint2)handle).x].asOpaqueDescriptor<T>();
+            else
+                return defaultGetDescriptorFromHandle(handle);
+        default:
             return defaultGetDescriptorFromHandle(handle);
-    default:
-        return defaultGetDescriptorFromHandle(handle);
-    }
-}*/
+        }
+    }*/
 
-    // std::vector<std::vector<uint32_t>> binaryOutputs;
- //    std::vector<std::string> outputs;
- //    ShaderLanguageConverter::slangCompiler(slangTest, {ShaderLanguage::SpirV}, {ShaderLanguage::GLSL}, binaryOutputs, outputs, true);
- //    //puts(outputs[0].c_str());
- //
-    // ShaderLanguageConverter::glslangSpirvCompiler(outputs[0], ShaderLanguage::GLSL, ::ShaderStage::FragmentShader);
+    /*std::vector<std::vector<uint32_t>> binaryOutputs;
+    std::vector<std::string> outputs;
+    ShaderLanguageConverter::slangCompiler(slangTest, {ShaderLanguage::SpirV}, {ShaderLanguage::GLSL}, binaryOutputs, outputs, true);
+    puts(outputs[0].c_str());
+
+    ShaderLanguageConverter::glslangSpirvCompiler(outputs[0], ShaderLanguage::GLSL, ::ShaderStage::FragmentShader);*/
 
     system("clear");
     Texture2D<fvec4> image;

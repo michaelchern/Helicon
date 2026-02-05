@@ -1,6 +1,7 @@
-#pragma once
-#include <Codegen/VariateProxy.h>
+﻿#pragma once
+
 #include <Codegen/Generator/SlangGenerator.hpp>
+#include <Codegen/VariateProxy.h>
 
 namespace EmbeddedShader::BuiltinVariate
 {

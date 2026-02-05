@@ -1,19 +1,19 @@
 ﻿#pragma once
 
 #include "boost/pfr.hpp"
-#include <sstream>
-#include <regex>
-#include <type_traits>
 #include <cassert>
-#include <slang.h>
-#include <unordered_map>
-#include <string>
-#include <tuple>
+#include <Codegen/AST/AST.hpp>
+#include <Codegen/MathProxy.h>
+#include <Codegen/ParseHelper.h>
 #include <ktm/ktm.h>
 #include <ktm/type/vec.h>
-#include <Codegen/AST/AST.hpp>
-#include <Codegen/ParseHelper.h>
-#include <Codegen/MathProxy.h>
+#include <regex>
+#include <slang.h>
+#include <sstream>
+#include <string>
+#include <tuple>
+#include <type_traits>
+#include <unordered_map>
 
 namespace EmbeddedShader
 {

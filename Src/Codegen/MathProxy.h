@@ -1,4 +1,5 @@
-#pragma once
+﻿#pragma once
+
 #include <Codegen/VariateProxy.h>
 
 namespace EmbeddedShader
