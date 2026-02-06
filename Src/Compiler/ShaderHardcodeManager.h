@@ -3,6 +3,8 @@
 #include "ShaderCodeCompiler.h"
 #include <filesystem>
 
+// ShaderHardcodeManager 管理一个双层缓存系统，在 Debug 和 Release 构建中都能加速着色器检索。
+
 namespace EmbeddedShader
 {
     struct ShaderHardcodeManager

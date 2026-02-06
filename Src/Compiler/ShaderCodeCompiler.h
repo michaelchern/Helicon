@@ -8,6 +8,8 @@
 #include <variant>
 #include <vector>
 
+// ShaderCodeCompiler 作为核心编译接口，管理从 Slang 源代码到多种目标语言和格式的转换。
+
 namespace EmbeddedShader
 {
     enum class ShaderLanguage : uint16_t
