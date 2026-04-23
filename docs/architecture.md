@@ -18,6 +18,18 @@ Out of scope for v0: windowing, PBR, glTF, ray tracing, async compute, multiple
 graphics APIs, CUDA/Metal/DirectX backends, and the shader DSL. Shader DSL work
 will build later on `src/ast/`, `src/dsl/`, and backend codegen boundaries.
 
+RHI direction: keep a stable backend-neutral public abstraction, implement the
+first backend in a Vulkan-first style, and expose advanced backend capabilities
+through capability/extension queries. Public APIs must not expose Vulkan handles.
+v0 only ships Vulkan, but Device, Queue, resources, bindings, pipelines, and
+framebuffer boundaries should leave room for future backends. Ray tracing, CUDA
+interop, bindless, and native-handle access belong behind extension boundaries,
+not in core RHI objects.
+
+Detailed local roadmap notes, reference repository paths, and private adoption
+order live under `.codex/private/`, which is ignored by Git. Public docs should
+record stable architecture principles only.
+
 ## Ownership Boundaries
 
 | Area | Contract |
@@ -32,6 +44,7 @@ will build later on `src/ast/`, `src/dsl/`, and backend codegen boundaries.
 | `scripts/` | Canonical build/test/CI entry points. |
 | `docs/zh/` | Human-editable Chinese source docs. |
 | `docs/` | Derived English agent context. |
+| `.codex/private/` | Local private agent plans and roadmap notes; ignored by Git. |
 | `third_party/` | Vendored code only when explicitly justified. |
 
 ## Build/Test Contract
@@ -50,6 +63,9 @@ powershell -ExecutionPolicy Bypass -File scripts/test.ps1
 - Public APIs live under `include/helicon/`.
 - Do not expose Vulkan handles in public API; keep backend details in
   `src/backends/vulkan/`.
+- Core RHI expresses portable resources, commands, bindings, pipelines,
+  framebuffers, and capability queries. Backend-specific advanced features must
+  go through extension boundaries.
 - Extend the C++ API conservatively and update tests/docs for behavior changes.
 
 ## Change Rules

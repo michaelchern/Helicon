@@ -26,6 +26,29 @@ enum class Status : std::uint32_t {
     runtime_error = 3,
 };
 
+enum class QueueType : std::uint32_t {
+    graphics = 1,
+    compute = 2,
+    copy = 3,
+};
+
+enum class DeviceFeature : std::uint32_t {
+    graphics = 1u << 0u,
+    compute = 1u << 1u,
+    copy = 1u << 2u,
+    ray_tracing = 1u << 3u,
+    cuda_interop = 1u << 4u,
+    bindless = 1u << 5u,
+    native_debug = 1u << 6u,
+};
+
+enum class ExtensionKind : std::uint32_t {
+    ray_tracing = 1,
+    cuda_interop = 2,
+    bindless = 3,
+    native_debug = 4,
+};
+
 enum class Format : std::uint32_t {
     rgba8_unorm = 1,
 };
@@ -39,11 +62,57 @@ enum class BufferUsage : std::uint32_t {
     storage = 1u << 5u,
 };
 
-enum class ImageUsage : std::uint32_t {
+enum class TextureUsage : std::uint32_t {
     transfer_src = 1u << 0u,
     transfer_dst = 1u << 1u,
     sampled = 1u << 2u,
     color_attachment = 1u << 3u,
+};
+
+using ImageUsage = TextureUsage;
+
+enum class ResourceState : std::uint32_t {
+    undefined = 0,
+    common = 1,
+    transfer_src = 2,
+    transfer_dst = 3,
+    vertex_buffer = 4,
+    index_buffer = 5,
+    constant_buffer = 6,
+    shader_resource = 7,
+    unordered_access = 8,
+    render_target = 9,
+    present = 10,
+};
+
+enum class ShaderStage : std::uint32_t {
+    none = 0,
+    vertex = 1u << 0u,
+    fragment = 1u << 1u,
+    compute = 1u << 2u,
+    all_graphics = 3u,
+    all = 7u,
+};
+
+enum class ResourceType : std::uint32_t {
+    none = 0,
+    constant_buffer = 1,
+    read_only_buffer = 2,
+    read_write_buffer = 3,
+    texture_srv = 4,
+    texture_uav = 5,
+    sampler = 6,
+    push_constants = 7,
+};
+
+enum class SamplerFilter : std::uint32_t {
+    nearest = 1,
+    linear = 2,
+};
+
+enum class AddressMode : std::uint32_t {
+    clamp_to_edge = 1,
+    repeat = 2,
 };
 
 [[nodiscard]] constexpr BufferUsage operator|(BufferUsage left, BufferUsage right) noexcept {
@@ -51,9 +120,14 @@ enum class ImageUsage : std::uint32_t {
                                     static_cast<std::uint32_t>(right));
 }
 
-[[nodiscard]] constexpr ImageUsage operator|(ImageUsage left, ImageUsage right) noexcept {
-    return static_cast<ImageUsage>(static_cast<std::uint32_t>(left) |
-                                   static_cast<std::uint32_t>(right));
+[[nodiscard]] constexpr TextureUsage operator|(TextureUsage left, TextureUsage right) noexcept {
+    return static_cast<TextureUsage>(static_cast<std::uint32_t>(left) |
+                                     static_cast<std::uint32_t>(right));
+}
+
+[[nodiscard]] constexpr ShaderStage operator|(ShaderStage left, ShaderStage right) noexcept {
+    return static_cast<ShaderStage>(static_cast<std::uint32_t>(left) |
+                                    static_cast<std::uint32_t>(right));
 }
 
 struct Extent2D {
@@ -68,9 +142,33 @@ struct Color {
     float a{1.0f};
 };
 
+struct DeviceCapabilities {
+    Backend backend{Backend::vulkan};
+    bool graphics_queue{false};
+    bool compute_queue{false};
+    bool copy_queue{false};
+    bool ray_tracing{false};
+    bool cuda_interop{false};
+    bool bindless{false};
+    bool native_debug{false};
+    std::uint32_t max_color_attachments{1};
+    std::uint32_t max_frames_in_flight{1};
+};
+
 struct BufferDesc {
     std::size_t size{0};
     BufferUsage usage{BufferUsage::storage};
+    ResourceState initial_state{ResourceState::common};
+    std::string debug_name;
+};
+
+struct TextureDesc {
+    Extent2D extent{};
+    Format format{Format::rgba8_unorm};
+    TextureUsage usage{TextureUsage::color_attachment | TextureUsage::transfer_src};
+    Color clear_color{};
+    ResourceState initial_state{ResourceState::undefined};
+    std::string debug_name;
 };
 
 struct ImageDesc {
@@ -78,6 +176,36 @@ struct ImageDesc {
     Format format{Format::rgba8_unorm};
     ImageUsage usage{ImageUsage::color_attachment | ImageUsage::transfer_src};
     Color clear_color{};
+    ResourceState initial_state{ResourceState::undefined};
+    std::string debug_name;
+};
+
+struct SamplerDesc {
+    SamplerFilter min_filter{SamplerFilter::linear};
+    SamplerFilter mag_filter{SamplerFilter::linear};
+    AddressMode address_u{AddressMode::clamp_to_edge};
+    AddressMode address_v{AddressMode::clamp_to_edge};
+    AddressMode address_w{AddressMode::clamp_to_edge};
+    std::string debug_name;
+};
+
+struct BindingLayoutItem {
+    ResourceType type{ResourceType::none};
+    std::uint32_t slot{0};
+    std::uint32_t array_size{1};
+    ShaderStage visibility{ShaderStage::all};
+    std::uint32_t byte_size{0};
+};
+
+struct BindingLayoutDesc {
+    std::uint32_t set_index{0};
+    std::vector<BindingLayoutItem> items;
+    std::string debug_name;
+};
+
+struct FramebufferInfo {
+    Extent2D extent{};
+    std::vector<Format> color_formats;
 };
 
 class Error final : public std::runtime_error {
@@ -97,11 +225,23 @@ private:
 namespace detail {
 class DeviceBackend;
 struct BufferHandle;
-struct ImageHandle;
+struct TextureHandle;
+struct SamplerHandle;
 struct ShaderModuleHandle;
+struct BindingLayoutHandle;
+struct BindingSetHandle;
 struct GraphicsPipelineHandle;
+struct ComputePipelineHandle;
+struct FramebufferHandle;
 struct CommandListHandle;
 } // namespace detail
+
+class DeviceExtension {
+public:
+    virtual ~DeviceExtension() = default;
+
+    [[nodiscard]] virtual ExtensionKind kind() const noexcept = 0;
+};
 
 class Buffer {
 public:
@@ -112,19 +252,20 @@ public:
 
 private:
     friend class Device;
+    friend class CommandList;
 
     Buffer(std::shared_ptr<detail::DeviceBackend> owner,
            std::shared_ptr<detail::BufferHandle> handle,
-           std::size_t size) noexcept;
+           BufferDesc desc) noexcept;
 
     std::shared_ptr<detail::DeviceBackend> owner_;
     std::shared_ptr<detail::BufferHandle> handle_;
-    std::size_t size_{0};
+    BufferDesc desc_{};
 };
 
-class Image {
+class Texture {
 public:
-    Image() = default;
+    Texture() = default;
 
     [[nodiscard]] bool valid() const noexcept;
     [[nodiscard]] Extent2D extent() const noexcept;
@@ -132,14 +273,36 @@ public:
 
 private:
     friend class Device;
+    friend class CommandList;
+    friend class RenderGraph;
 
-    Image(std::shared_ptr<detail::DeviceBackend> owner,
-          std::shared_ptr<detail::ImageHandle> handle,
-          ImageDesc desc) noexcept;
+    Texture(std::shared_ptr<detail::DeviceBackend> owner,
+            std::shared_ptr<detail::TextureHandle> handle,
+            TextureDesc desc) noexcept;
 
     std::shared_ptr<detail::DeviceBackend> owner_;
-    std::shared_ptr<detail::ImageHandle> handle_;
-    ImageDesc desc_{};
+    std::shared_ptr<detail::TextureHandle> handle_;
+    TextureDesc desc_{};
+};
+
+using Image = Texture;
+
+class Sampler {
+public:
+    Sampler() = default;
+
+    [[nodiscard]] bool valid() const noexcept;
+
+private:
+    friend class Device;
+
+    Sampler(std::shared_ptr<detail::DeviceBackend> owner,
+            std::shared_ptr<detail::SamplerHandle> handle,
+            SamplerDesc desc) noexcept;
+
+    std::shared_ptr<detail::DeviceBackend> owner_;
+    std::shared_ptr<detail::SamplerHandle> handle_;
+    SamplerDesc desc_{};
 };
 
 class ShaderModule {
@@ -158,6 +321,76 @@ private:
     std::shared_ptr<detail::ShaderModuleHandle> handle_;
 };
 
+class BindingLayout {
+public:
+    BindingLayout() = default;
+
+    [[nodiscard]] bool valid() const noexcept;
+    [[nodiscard]] std::size_t item_count() const noexcept;
+
+private:
+    friend class Device;
+
+    BindingLayout(std::shared_ptr<detail::DeviceBackend> owner,
+                  std::shared_ptr<detail::BindingLayoutHandle> handle,
+                  BindingLayoutDesc desc) noexcept;
+
+    std::shared_ptr<detail::DeviceBackend> owner_;
+    std::shared_ptr<detail::BindingLayoutHandle> handle_;
+    BindingLayoutDesc desc_{};
+};
+
+struct BindingSetItem {
+    ResourceType type{ResourceType::none};
+    std::uint32_t slot{0};
+    std::uint32_t array_element{0};
+    Buffer buffer{};
+    Texture texture{};
+    Sampler sampler{};
+};
+
+struct BindingSetDesc {
+    BindingLayout layout{};
+    std::vector<BindingSetItem> items;
+    bool track_liveness{true};
+    std::string debug_name;
+};
+
+struct GraphicsPipelineDesc {
+    ShaderModule vertex_shader{};
+    ShaderModule fragment_shader{};
+    std::vector<BindingLayout> binding_layouts;
+    FramebufferInfo framebuffer_info{};
+    std::string debug_name;
+};
+
+struct ComputePipelineDesc {
+    ShaderModule compute_shader{};
+    std::vector<BindingLayout> binding_layouts;
+    std::string debug_name;
+};
+
+struct FramebufferDesc {
+    std::vector<Texture> color_attachments;
+    std::string debug_name;
+};
+
+class BindingSet {
+public:
+    BindingSet() = default;
+
+    [[nodiscard]] bool valid() const noexcept;
+
+private:
+    friend class Device;
+
+    BindingSet(std::shared_ptr<detail::DeviceBackend> owner,
+               std::shared_ptr<detail::BindingSetHandle> handle) noexcept;
+
+    std::shared_ptr<detail::DeviceBackend> owner_;
+    std::shared_ptr<detail::BindingSetHandle> handle_;
+};
+
 class GraphicsPipeline {
 public:
     GraphicsPipeline() = default;
@@ -174,21 +407,60 @@ private:
     std::shared_ptr<detail::GraphicsPipelineHandle> handle_;
 };
 
+class ComputePipeline {
+public:
+    ComputePipeline() = default;
+
+    [[nodiscard]] bool valid() const noexcept;
+
+private:
+    friend class Device;
+
+    ComputePipeline(std::shared_ptr<detail::DeviceBackend> owner,
+                    std::shared_ptr<detail::ComputePipelineHandle> handle) noexcept;
+
+    std::shared_ptr<detail::DeviceBackend> owner_;
+    std::shared_ptr<detail::ComputePipelineHandle> handle_;
+};
+
+class Framebuffer {
+public:
+    Framebuffer() = default;
+
+    [[nodiscard]] bool valid() const noexcept;
+    [[nodiscard]] const FramebufferInfo &info() const noexcept;
+
+private:
+    friend class Device;
+
+    Framebuffer(std::shared_ptr<detail::DeviceBackend> owner,
+                std::shared_ptr<detail::FramebufferHandle> handle,
+                FramebufferInfo info) noexcept;
+
+    std::shared_ptr<detail::DeviceBackend> owner_;
+    std::shared_ptr<detail::FramebufferHandle> handle_;
+    FramebufferInfo info_{};
+};
+
 class CommandList {
 public:
     CommandList() = default;
 
     [[nodiscard]] bool valid() const noexcept;
+    void transition_buffer(const Buffer &buffer, ResourceState before, ResourceState after) const;
+    void transition_texture(const Texture &texture, ResourceState before, ResourceState after) const;
 
 private:
     friend class Device;
     friend class Queue;
 
     CommandList(std::shared_ptr<detail::DeviceBackend> owner,
-                std::shared_ptr<detail::CommandListHandle> handle) noexcept;
+                std::shared_ptr<detail::CommandListHandle> handle,
+                QueueType type) noexcept;
 
     std::shared_ptr<detail::DeviceBackend> owner_;
     std::shared_ptr<detail::CommandListHandle> handle_;
+    QueueType type_{QueueType::graphics};
 };
 
 class Queue {
@@ -196,14 +468,16 @@ public:
     Queue() = default;
 
     [[nodiscard]] bool valid() const noexcept;
+    [[nodiscard]] QueueType type() const noexcept;
     void submit_and_wait(CommandList &commands) const;
 
 private:
     friend class Device;
 
-    explicit Queue(std::shared_ptr<detail::DeviceBackend> backend) noexcept;
+    Queue(std::shared_ptr<detail::DeviceBackend> backend, QueueType type) noexcept;
 
     std::shared_ptr<detail::DeviceBackend> backend_;
+    QueueType type_{QueueType::graphics};
 };
 
 class Device {
@@ -212,13 +486,24 @@ public:
 
     [[nodiscard]] bool valid() const noexcept;
     [[nodiscard]] Backend backend() const;
+    [[nodiscard]] DeviceCapabilities capabilities() const;
+    [[nodiscard]] bool supports(DeviceFeature feature) const;
+    [[nodiscard]] std::shared_ptr<DeviceExtension> query_extension(ExtensionKind kind) const;
     [[nodiscard]] Queue graphics_queue() const;
+    [[nodiscard]] Queue queue(QueueType type) const;
 
     [[nodiscard]] Buffer create_buffer(const BufferDesc &desc) const;
+    [[nodiscard]] Texture create_texture(const TextureDesc &desc) const;
     [[nodiscard]] Image create_image(const ImageDesc &desc) const;
+    [[nodiscard]] Sampler create_sampler(const SamplerDesc &desc = {}) const;
     [[nodiscard]] ShaderModule create_shader_module(std::span<const std::uint32_t> spirv) const;
+    [[nodiscard]] BindingLayout create_binding_layout(const BindingLayoutDesc &desc) const;
+    [[nodiscard]] BindingSet create_binding_set(const BindingSetDesc &desc) const;
+    [[nodiscard]] GraphicsPipeline create_graphics_pipeline(const GraphicsPipelineDesc &desc) const;
     [[nodiscard]] GraphicsPipeline create_builtin_triangle_pipeline(Format color_format) const;
-    [[nodiscard]] CommandList create_command_list() const;
+    [[nodiscard]] ComputePipeline create_compute_pipeline(const ComputePipelineDesc &desc) const;
+    [[nodiscard]] Framebuffer create_framebuffer(const FramebufferDesc &desc) const;
+    [[nodiscard]] CommandList create_command_list(QueueType type = QueueType::graphics) const;
 
 private:
     friend class Context;

@@ -79,6 +79,26 @@ VkImageUsageFlags to_vk_usage(ImageUsage usage) {
     return flags == 0 ? VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT : flags;
 }
 
+VkFilter to_vk_filter(SamplerFilter filter) {
+    switch (filter) {
+    case SamplerFilter::nearest:
+        return VK_FILTER_NEAREST;
+    case SamplerFilter::linear:
+        return VK_FILTER_LINEAR;
+    }
+    throw_vk(Status::invalid_argument, "Unsupported sampler filter.");
+}
+
+VkSamplerAddressMode to_vk_address_mode(AddressMode mode) {
+    switch (mode) {
+    case AddressMode::clamp_to_edge:
+        return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    case AddressMode::repeat:
+        return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    }
+    throw_vk(Status::invalid_argument, "Unsupported sampler address mode.");
+}
+
 bool layer_available(std::string_view name) {
     auto count = std::uint32_t{0};
     if (vkEnumerateInstanceLayerProperties(&count, nullptr) != VK_SUCCESS) {
@@ -175,7 +195,7 @@ private:
     VkDeviceSize size_{0};
 };
 
-class VulkanImageHandle final : public ImageHandle {
+class VulkanImageHandle final : public TextureHandle {
 public:
     VulkanImageHandle(VkDevice device,
                       VkImage image,
@@ -229,7 +249,31 @@ private:
     VkShaderModule module_{VK_NULL_HANDLE};
 };
 
+class VulkanSamplerHandle final : public SamplerHandle {
+public:
+    VulkanSamplerHandle(VkDevice device, VkSampler sampler) noexcept : device_(device), sampler_(sampler) {}
+
+    VulkanSamplerHandle(const VulkanSamplerHandle &) = delete;
+    VulkanSamplerHandle &operator=(const VulkanSamplerHandle &) = delete;
+
+    ~VulkanSamplerHandle() override {
+        if (sampler_ != VK_NULL_HANDLE) {
+            vkDestroySampler(device_, sampler_, nullptr);
+        }
+    }
+
+    [[nodiscard]] VkSampler sampler() const noexcept { return sampler_; }
+
+private:
+    VkDevice device_{VK_NULL_HANDLE};
+    VkSampler sampler_{VK_NULL_HANDLE};
+};
+
+class VulkanBindingLayoutHandle final : public BindingLayoutHandle {};
+class VulkanBindingSetHandle final : public BindingSetHandle {};
 class VulkanGraphicsPipelineHandle final : public GraphicsPipelineHandle {};
+class VulkanComputePipelineHandle final : public ComputePipelineHandle {};
+class VulkanFramebufferHandle final : public FramebufferHandle {};
 
 class VulkanCommandListHandle final : public CommandListHandle {
 public:
@@ -456,6 +500,25 @@ public:
         return Backend::vulkan;
     }
 
+    [[nodiscard]] DeviceCapabilities capabilities() const override {
+        auto result = DeviceCapabilities{};
+        result.backend = Backend::vulkan;
+        result.graphics_queue = true;
+        result.compute_queue = false;
+        result.copy_queue = false;
+        result.ray_tracing = false;
+        result.cuda_interop = false;
+        result.bindless = false;
+        result.native_debug = false;
+        result.max_color_attachments = 1;
+        result.max_frames_in_flight = 1;
+        return result;
+    }
+
+    [[nodiscard]] std::shared_ptr<DeviceExtension> query_extension(ExtensionKind) override {
+        return nullptr;
+    }
+
     [[nodiscard]] std::shared_ptr<BufferHandle> create_buffer(const BufferDesc &desc) override {
         if (desc.size == 0) {
             throw_vk(Status::invalid_argument, "Buffers must have a non-zero size.");
@@ -465,9 +528,26 @@ public:
                            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
     }
 
-    [[nodiscard]] std::shared_ptr<ImageHandle> create_image(const ImageDesc &desc) override {
-        validate_image_desc(desc);
+    [[nodiscard]] std::shared_ptr<TextureHandle> create_texture(const TextureDesc &desc) override {
+        validate_texture_desc(desc);
         return make_image(desc.extent, to_vk_format(desc.format), to_vk_usage(desc.usage));
+    }
+
+    [[nodiscard]] std::shared_ptr<SamplerHandle> create_sampler(const SamplerDesc &desc) override {
+        VkSamplerCreateInfo create_info{};
+        create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        create_info.magFilter = to_vk_filter(desc.mag_filter);
+        create_info.minFilter = to_vk_filter(desc.min_filter);
+        create_info.addressModeU = to_vk_address_mode(desc.address_u);
+        create_info.addressModeV = to_vk_address_mode(desc.address_v);
+        create_info.addressModeW = to_vk_address_mode(desc.address_w);
+        create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        create_info.minLod = 0.0f;
+        create_info.maxLod = VK_LOD_CLAMP_NONE;
+
+        VkSampler sampler = VK_NULL_HANDLE;
+        check(vkCreateSampler(device_, &create_info, nullptr, &sampler), "Failed to create Vulkan sampler.");
+        return std::make_shared<VulkanSamplerHandle>(device_, sampler);
     }
 
     [[nodiscard]] std::shared_ptr<ShaderModuleHandle>
@@ -486,6 +566,20 @@ public:
         return std::make_shared<VulkanShaderModuleHandle>(device_, module);
     }
 
+    [[nodiscard]] std::shared_ptr<BindingLayoutHandle>
+    create_binding_layout(const BindingLayoutDesc &) override {
+        return std::make_shared<VulkanBindingLayoutHandle>();
+    }
+
+    [[nodiscard]] std::shared_ptr<BindingSetHandle> create_binding_set(const BindingSetDesc &) override {
+        return std::make_shared<VulkanBindingSetHandle>();
+    }
+
+    [[nodiscard]] std::shared_ptr<GraphicsPipelineHandle>
+    create_graphics_pipeline(const GraphicsPipelineDesc &) override {
+        return std::make_shared<VulkanGraphicsPipelineHandle>();
+    }
+
     [[nodiscard]] std::shared_ptr<GraphicsPipelineHandle>
     create_builtin_triangle_pipeline(Format color_format) override {
         if (color_format != Format::rgba8_unorm) {
@@ -494,7 +588,19 @@ public:
         return std::make_shared<VulkanGraphicsPipelineHandle>();
     }
 
-    [[nodiscard]] std::shared_ptr<CommandListHandle> create_command_list() override {
+    [[nodiscard]] std::shared_ptr<ComputePipelineHandle>
+    create_compute_pipeline(const ComputePipelineDesc &) override {
+        throw_vk(Status::unavailable, "Compute pipelines are reserved for a later RHI milestone.");
+    }
+
+    [[nodiscard]] std::shared_ptr<FramebufferHandle> create_framebuffer(const FramebufferDesc &) override {
+        return std::make_shared<VulkanFramebufferHandle>();
+    }
+
+    [[nodiscard]] std::shared_ptr<CommandListHandle> create_command_list(QueueType type) override {
+        if (type != QueueType::graphics) {
+            throw_vk(Status::unavailable, "Vulkan v0 only supports graphics command lists.");
+        }
         auto command_buffer = allocate_command_buffer();
         VkCommandBufferBeginInfo begin_info{};
         begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -504,7 +610,30 @@ public:
         return std::make_shared<VulkanCommandListHandle>(device_, command_pool_, command_buffer);
     }
 
-    void submit_and_wait(CommandListHandle &commands) override {
+    void transition_buffer(CommandListHandle &commands,
+                           BufferHandle &buffer,
+                           ResourceState,
+                           ResourceState) override {
+        if (dynamic_cast<VulkanCommandListHandle *>(&commands) == nullptr ||
+            dynamic_cast<VulkanBufferHandle *>(&buffer) == nullptr) {
+            throw_vk(Status::invalid_argument, "Buffer transition objects do not belong to the Vulkan backend.");
+        }
+    }
+
+    void transition_texture(CommandListHandle &commands,
+                            TextureHandle &texture,
+                            ResourceState,
+                            ResourceState) override {
+        if (dynamic_cast<VulkanCommandListHandle *>(&commands) == nullptr ||
+            dynamic_cast<VulkanImageHandle *>(&texture) == nullptr) {
+            throw_vk(Status::invalid_argument, "Texture transition objects do not belong to the Vulkan backend.");
+        }
+    }
+
+    void submit_and_wait(QueueType type, CommandListHandle &commands) override {
+        if (type != QueueType::graphics) {
+            throw_vk(Status::unavailable, "Vulkan v0 only supports graphics queue submission.");
+        }
         auto *vk_commands = dynamic_cast<VulkanCommandListHandle *>(&commands);
         if (vk_commands == nullptr) {
             throw_vk(Status::invalid_argument, "Command list does not belong to the Vulkan backend.");
@@ -944,6 +1073,19 @@ private:
 
         check(vkQueueSubmit(graphics_queue_, 1, &submit_info, fence.fence), "Failed to submit command buffer.");
         check(vkWaitForFences(device_, 1, &fence.fence, VK_TRUE, UINT64_MAX), "Failed to wait for command buffer.");
+    }
+
+    static void validate_texture_fields(Extent2D extent, Format format) {
+        if (extent.width == 0 || extent.height == 0) {
+            throw_vk(Status::invalid_argument, "Textures must have non-zero dimensions.");
+        }
+        if (format != Format::rgba8_unorm) {
+            throw_vk(Status::invalid_argument, "Vulkan v0 only supports rgba8_unorm textures.");
+        }
+    }
+
+    static void validate_texture_desc(const TextureDesc &desc) {
+        validate_texture_fields(desc.extent, desc.format);
     }
 
     static void validate_image_desc(const ImageDesc &desc) {

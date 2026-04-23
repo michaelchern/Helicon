@@ -12,6 +12,15 @@ Helicon 当前定位为 **纯 C++20 高性能渲染核心**。第一阶段聚焦
 后端，也暂不实现 shader DSL。Shader DSL 会在渲染链路稳定后，再基于 `src/ast/`、
 `src/dsl/` 和 `src/backends/` 扩展。
 
+RHI 框架采用“稳定公共抽象 + Vulkan-first 后端 + 能力扩展”的方向：公共 API
+保持后端无关，不能暴露 Vulkan 句柄；v0 只实现 Vulkan，但 Device、Queue、资源、
+Binding、Pipeline、Framebuffer 等边界要保留多后端余地。光追、CUDA interop、
+bindless、native handle 等高级能力后续通过 capability/extension 查询进入，
+不要直接塞进基础 RHI 对象。
+
+详细技术路线、参考仓库路径和吸收顺序属于本地私有 Agent 记忆，放在
+`.codex/private/` 下并由 `.gitignore` 保护；正式文档只沉淀可公开的稳定原则。
+
 ## 目录职责
 
 - `include/helicon/`：C++ 公共 API。当前主入口是 `helicon/helicon.hpp`。
@@ -24,6 +33,7 @@ Helicon 当前定位为 **纯 C++20 高性能渲染核心**。第一阶段聚焦
 - `scripts/`：标准构建和测试入口。
 - `docs/zh/`：中文源文档。
 - `docs/`：英文 Agent 上下文。
+- `.codex/private/`：本地私有 Agent 计划和路线，不进入 Git。
 - `third_party/`：第三方代码预留区；新增依赖前必须有明确理由。
 
 ## 构建和测试流程
@@ -41,7 +51,8 @@ powershell -ExecutionPolicy Bypass -File scripts/test.ps1
 ## API 边界
 
 公开 API 放在 `include/helicon/` 下。Vulkan 句柄不能暴露到公共 API。
-后端细节必须留在 `src/backends/vulkan/`。
+后端细节必须留在 `src/backends/vulkan/`。基础 RHI 只表达通用资源、命令、
+绑定、管线、帧缓冲和能力查询；后端特有能力通过 extension 边界暴露给内部模块。
 
 ## 改动原则
 

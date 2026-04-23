@@ -35,8 +35,40 @@ int main() {
                                               helicon::ImageUsage::transfer_src,
                                           {0.0f, 0.0f, 0.0f, 1.0f}});
         auto command_list = device.create_command_list();
+        auto sampler = device.create_sampler();
+        auto binding_layout = device.create_binding_layout(
+            {0,
+             {{helicon::ResourceType::texture_srv, 0, 1, helicon::ShaderStage::fragment, 0},
+              {helicon::ResourceType::sampler, 1, 1, helicon::ShaderStage::fragment, 0}},
+             "texture_and_sampler"});
 
-        if (!device.valid() || !buffer.valid() || !image.valid() || !command_list.valid()) {
+        helicon::BindingSetDesc binding_set_desc;
+        binding_set_desc.layout = binding_layout;
+        binding_set_desc.items.push_back(
+            {helicon::ResourceType::texture_srv, 0, 0, {}, image, {}});
+        binding_set_desc.items.push_back(
+            {helicon::ResourceType::sampler, 1, 0, {}, {}, sampler});
+        auto binding_set = device.create_binding_set(binding_set_desc);
+
+        helicon::FramebufferDesc framebuffer_desc;
+        framebuffer_desc.color_attachments.push_back(image);
+        auto framebuffer = device.create_framebuffer(framebuffer_desc);
+
+        const auto capabilities = device.capabilities();
+        if (!capabilities.graphics_queue || !device.supports(helicon::DeviceFeature::graphics)) {
+            std::cerr << "Expected Vulkan device to report graphics support.\n";
+            return 1;
+        }
+        if (device.query_extension(helicon::ExtensionKind::ray_tracing) != nullptr) {
+            std::cerr << "Expected ray tracing extension to be unavailable in v0.\n";
+            return 1;
+        }
+
+        command_list.transition_buffer(buffer, helicon::ResourceState::common, helicon::ResourceState::transfer_dst);
+        command_list.transition_texture(image, helicon::ResourceState::undefined, helicon::ResourceState::render_target);
+
+        if (!device.valid() || !buffer.valid() || !image.valid() || !command_list.valid() ||
+            !sampler.valid() || !binding_layout.valid() || !binding_set.valid() || !framebuffer.valid()) {
             std::cerr << "Expected Vulkan RHI handles to be valid.\n";
             return 1;
         }
