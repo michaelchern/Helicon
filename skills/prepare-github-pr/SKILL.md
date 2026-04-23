@@ -34,14 +34,19 @@ Include:
 - Why this change is needed
 - Validation performed
 - Risks / follow-ups
-- Proposed Conventional Commits message
+- Proposed Conventional Commits subject
+- Proposed detailed commit body
 - Proposed PR title
 - Proposed PR description
 - Files proposed for staging
 
 # Commit message rules
 
-Use Conventional Commits exactly:
+Use a two-part commit message:
+
+- Subject: use Conventional Commits exactly.
+- Body: include detailed change description, affected files/modules,
+  validation, and risks.
 
 ```text
 <type>(<optional scope>): <subject>
@@ -57,6 +62,24 @@ Use Conventional Commits exactly:
   - `feat(shader): 增加着色器编译工具目标`
   - `docs(architecture): 补充引擎集成说明`
 
+The commit body should include:
+
+```text
+Summary:
+- ...
+
+Details:
+- ...
+
+Validation:
+- ...
+
+Risks:
+- ...
+```
+
+If no PR is created, still include the detailed commit body.
+
 # Write safety
 
 - Never stage unrelated changes silently.
@@ -64,7 +87,9 @@ Use Conventional Commits exactly:
 - Prefer explicit file paths when staging.
 - Use `git add -A` only when the user confirms the whole worktree belongs in
   scope.
-- Never commit with a message that violates the commit message rules above.
+- Never commit with a subject that violates the commit message rules above.
+- Do not omit the commit body unless the user explicitly asks for a subject-only
+  commit.
 - Default to a draft PR unless the user explicitly asks for ready-for-review.
 - Stop and report blockers for missing GitHub auth, missing remote, failed
   validation, or unclear scope.

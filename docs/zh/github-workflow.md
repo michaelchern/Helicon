@@ -34,14 +34,20 @@ Codex 应该先做这些事：
 - 为什么需要这个改动。
 - 验证情况。
 - 风险或后续事项。
-- 符合 Conventional Commits 的建议 commit message。
+- 符合 Conventional Commits 的建议 commit subject。
+- 详细 commit body。
 - 建议的 PR title。
 - 建议的 PR description。
 - 准备纳入提交的文件列表。
 
 ## 提交信息规范
 
-提交信息必须严格遵循 Conventional Commits，并使用以下格式：
+Git 提交信息分为两部分：
+
+- commit subject：第一行，必须严格遵循 Conventional Commits。
+- commit body：正文，用来详细描述本次变动、影响范围、验证情况和风险。
+
+commit subject 必须使用以下格式：
 
 ```text
 <type>(<optional scope>): <subject>
@@ -72,6 +78,26 @@ Codex 应该先做这些事：
 - `feat(shader): 增加着色器编译工具目标`
 - `docs(architecture): 补充引擎集成说明`
 
+commit body 建议包含：
+
+```text
+Summary:
+- 本次改了什么。
+
+Details:
+- 修改了哪些文件或模块。
+- 关键行为或流程有什么变化。
+
+Validation:
+- 运行了哪些验证。
+- 如果没有运行，说明原因。
+
+Risks:
+- 剩余风险或后续事项。
+```
+
+如果这次没有创建 PR，commit body 也要尽量写清楚，不能只留下 subject。PR description 可以基于 commit body 再整理成 GitHub Markdown。
+
 ### 3. 你校对并确认
 
 你可以要求 Codex 修改草稿，例如：
@@ -95,7 +121,7 @@ PR 描述再写得短一点。
 确认后，Codex 才可以：
 
 1. 只 stage 本次确认范围内的文件。
-2. 使用已确认且符合 Conventional Commits 的信息创建 commit。
+2. 使用已确认的 subject 和 body 创建 commit。
 3. push 到 GitHub 分支。
 4. 创建 draft PR。
 5. 返回 PR 链接、分支名、commit、验证结果。

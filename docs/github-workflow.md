@@ -39,14 +39,21 @@ Before any commit or push, provide:
 - Why this change is needed.
 - Validation performed.
 - Risks or follow-ups.
-- Proposed Conventional Commits message.
+- Proposed Conventional Commits subject.
+- Proposed detailed commit body.
 - Proposed PR title.
 - Proposed PR description.
 - Files proposed for staging.
 
 ## Commit Message Contract
 
-All Git commit messages must follow Conventional Commits:
+Git commit messages must have:
+
+- Subject: Conventional Commits first line.
+- Body: detailed explanation of changes, affected files or modules, validation,
+  and risks.
+
+The subject must follow:
 
 ```text
 <type>(<optional scope>): <subject>
@@ -67,6 +74,27 @@ Examples:
 - `feat(shader): 增加着色器编译工具目标`
 - `docs(architecture): 补充引擎集成说明`
 
+The commit body should include:
+
+```text
+Summary:
+- What changed.
+
+Details:
+- Files or modules changed.
+- Important behavior or workflow changes.
+
+Validation:
+- Commands or checks run.
+- If validation was skipped, explain why.
+
+Risks:
+- Remaining risks or follow-ups.
+```
+
+If no PR is created, the commit body still needs enough detail for Git history.
+PR descriptions may reuse and polish the commit body as GitHub Markdown.
+
 ## Approval Gate
 
 Proceed only after explicit user confirmation such as:
@@ -86,7 +114,7 @@ After confirmation:
 - Stage only the confirmed files.
 - Avoid `git add -A` unless the user confirms the whole worktree belongs in
   scope.
-- Commit with the approved Conventional Commits message.
+- Commit with the approved Conventional Commits subject and detailed body.
 - Push to a branch.
 - Open a draft PR by default.
 - Use a ready-for-review PR only when explicitly requested.

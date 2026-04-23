@@ -52,9 +52,10 @@ When preparing a PR, include:
 - Risks / follow-ups
 
 Before committing, pushing, or opening a PR:
-- Generate a commit message, PR title, and PR description for user review
+- Generate a commit subject, detailed commit body, PR title, and PR description for user review
 - List the files proposed for staging
 - Wait for explicit user confirmation
 - Use Conventional Commits: `<type>(<optional scope>): <subject>`
 - Use only these types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
 - Keep `type` lowercase English and write `subject` in concise Chinese imperative present tense
+- Include a commit body with detailed summary, changed files or modules, validation, and risks unless the user asks for subject-only commits
