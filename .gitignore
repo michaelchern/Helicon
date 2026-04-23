@@ -2,3 +2,4 @@ build/
 out/
 .vs/
 .codex/config.toml
+.codex/private/

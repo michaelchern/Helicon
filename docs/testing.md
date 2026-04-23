@@ -13,10 +13,16 @@ Run `scripts/build.ps1` first when build outputs may be missing or stale.
 
 ## Test Contract
 
-- Test entry point: `tests/helicon_test.c`
-- Test runner: CTest
-- Build directory: `build/`
-- Expected local and CI entry point: `scripts/test.ps1`
+- `tests/helicon_smoke_test.cpp`: C++ smoke test for version, status strings, and
+  backend availability query.
+- `tests/render_graph_test.cpp`: C++ RHI/render graph regression. When Vulkan is
+  available, it creates a device, buffer, image, command list, clear-only pass,
+  builtin triangle pass, and validates RGBA8 readback pixels.
+- If no Vulkan device is available, the GPU portion skips and passes. Building
+  still requires the Vulkan SDK.
+- Test runner: CTest.
+- Build directory: `build/`.
+- Expected local and CI entry point: `scripts/test.ps1`.
 
 ## Pass Criteria
 
@@ -28,14 +34,6 @@ Run `scripts/build.ps1` first when build outputs may be missing or stale.
 1. Re-run `scripts/build.ps1`.
 2. Re-run `scripts/test.ps1`.
 3. Inspect the first failing CTest output.
-4. Fix the smallest affected code area.
-5. Add or update tests when behavior changes.
-
-## Script Failure Routing
-
-| Symptom | Check |
-| --- | --- |
-| `ctest` not found | Ensure CMake/CTest is installed and on `PATH`. |
-| `build/` missing | Run `scripts/build.ps1` first. |
-| test executable missing | Check build output and `CMakeLists.txt`. |
-| assertion or process failure | Inspect `tests/` and the implementation under `src/`. |
+4. For Vulkan initialization failures, check Vulkan SDK, drivers, and device
+   availability.
+5. Fix the smallest affected code area and update tests when behavior changes.
