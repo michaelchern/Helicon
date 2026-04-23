@@ -26,6 +26,7 @@
 | `docs/zh/architecture.md` | `docs/architecture.md` |
 | `docs/zh/build.md` | `docs/build.md` |
 | `docs/zh/testing.md` | `docs/testing.md` |
+| `docs/zh/code-style.md` | `docs/code-style.md` |
 | `docs/zh/project-structure.md` | `docs/project-structure.md` |
 | `docs/zh/github-workflow.md` | `docs/github-workflow.md` |
 | `docs/zh/doc-workflow.md` | `docs/doc-sync.md` |

@@ -12,11 +12,12 @@ repeated context.
 Before making changes:
 1. Read docs/architecture.md
 2. Read docs/project-structure.md
-3. Read docs/build.md if the change touches build setup, CMake, or build assumptions
-4. Read docs/testing.md if the change touches validation strategy, tests, or test assumptions
-5. Read docs/doc-sync.md if the change touches documentation or project guidance
-6. Read docs/github-workflow.md if preparing commits, pushes, or pull requests
-7. Prefer existing scripts in /scripts when they are still relevant; do not recreate deleted scaffolding unless requested
+3. Read docs/code-style.md if the change touches formatting, naming, comments, or large-scale normalization
+4. Read docs/build.md if the change touches build setup, CMake, or build assumptions
+5. Read docs/testing.md if the change touches validation strategy, tests, or test assumptions
+6. Read docs/doc-sync.md if the change touches documentation or project guidance
+7. Read docs/github-workflow.md if preparing commits, pushes, or pull requests
+8. Prefer existing scripts in /scripts when they are still relevant; do not recreate deleted scaffolding unless requested
 
 ## Documentation language workflow
 - Human-editable Chinese source docs live under docs/zh/
@@ -38,9 +39,11 @@ Before making changes:
 - Do not add dependencies unless justified
 - Keep changes local and easy to review
 - Update docs when behavior or workflow changes
-- When formatting code in a file whose global style is not finalized yet, preserve the file's existing header banner, comment structure, and local layout conventions
-- For `include/utils.h`, treat the current file header template and existing comments as the formatting baseline; do not rewrite them unless the user explicitly asks
-- Do not perform repo-wide style normalization, indentation unification, or comment-style conversion until the user defines the formatter/style contract
+- Read `docs/code-style.md` before formatting, renaming, or normalizing code style
+- Use `include/utils.h` as the current reference header for file banners, section comments, and bilingual declaration comments
+- Use snake_case for Helicon-owned free functions, helper methods, parameters, and member variables in headers that adopt the repo style
+- In compatibility headers such as `include/rhiHLSL.h`, preserve identifiers constrained by upstream APIs, specs, shaders, or binary layout contracts unless the user explicitly asks for breaking renames
+- Do not perform repo-wide style normalization, indentation unification, or comment-style conversion beyond the defined formatter/style contract
 
 ## Validation rules
 After code or workflow changes:
