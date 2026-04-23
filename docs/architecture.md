@@ -1,75 +1,54 @@
 # Agent Context: Architecture
 
-Human source: `docs/zh/architecture.md`. Use this file as compact architecture
-context for planning and code changes.
+Human source: `docs/zh/architecture.md`. Use this file as the compact contract
+for the repository's current exploratory workflow.
 
-## Project Goal
+## Current Phase
 
-Helicon is a pure C++20 high-performance rendering core. The v0 milestone
-targets Windows + Vulkan with a C++ RHI facade and a minimal render graph that
-can render a headless offscreen triangle and read back RGBA8 pixels.
+Helicon is in an exploratory assembly phase. The user may copy candidate code
+into the repository, then iterate with Codex on design, cleanup, naming,
+integration, and selection.
 
-C++20 is the project standard because it provides the current API needs
-(`std::span`, RAII-friendly types, strong enums, modern library facilities) with
-mature Visual Studio/CMake/compiler support. Do not raise to C++23 unless a
-specific feature materially simplifies implementation.
+Do not treat the current code snapshot as a finalized architecture. Public docs
+should record only stable decisions that survived review and iteration.
 
-Out of scope for v0: windowing, PBR, glTF, ray tracing, async compute, multiple
-graphics APIs, CUDA/Metal/DirectX backends, and the shader DSL. Shader DSL work
-will build later on `src/ast/`, `src/dsl/`, and backend codegen boundaries.
+## What To Treat As Stable
 
-RHI direction: keep a stable backend-neutral public abstraction, implement the
-first backend in a Vulkan-first style, and expose advanced backend capabilities
-through capability/extension queries. Public APIs must not expose Vulkan handles.
-v0 only ships Vulkan, but Device, Queue, resources, bindings, pipelines, and
-framebuffer boundaries should leave room for future backends. Ray tracing, CUDA
-interop, bindless, and native-handle access belong behind extension boundaries,
-not in core RHI objects.
+- The repo is Codex-first and doc-driven.
+- Chinese docs under `docs/zh/` are the human source of truth.
+- English docs under `docs/` are derived agent context.
+- Stable decisions should be written down to reduce repeated context in later work.
 
-Detailed local roadmap notes, reference repository paths, and private adoption
-order live under `.codex/private/`, which is ignored by Git. Public docs should
-record stable architecture principles only.
+## What Not To Assume Yet
+
+- A fixed graphics API or backend strategy
+- A fixed public API surface
+- A fixed build baseline
+- A fixed test matrix
+- That all copied-in code is meant to stay
 
 ## Ownership Boundaries
 
 | Area | Contract |
 | --- | --- |
-| `include/helicon/` | Public C++ API. Current main entry: `helicon/helicon.hpp`. |
-| `src/` | Production implementation: RHI facade, render graph, backend glue. |
-| `src/backends/vulkan/` | Vulkan v0 backend: instance/device/queue, resources, command submission, offscreen render/readback. |
-| `src/shaders/` | Embedded shader data; current builtin triangle SPIR-V constants. |
-| `src/ast/`, `src/dsl/` | Reserved for future Helicon Shader DSL work. |
-| `tests/` | C++ smoke tests and C++ render graph regression tests. |
-| `examples/` | Runnable examples, currently `triangle_graph`. |
-| `scripts/` | Canonical build/test/CI entry points. |
+| `include/helicon/` | Current public-header candidate area. Do not treat it as a stable API promise unless the docs say so. |
+| `src/` | Current implementation and experiment area. Transitional structure is allowed. |
+| `examples/` | Example or scratch entry points. Long-term status may change. |
+| `tests/` | Reserved for future stable validation. It may be empty during exploration. |
+| `scripts/` | Reusable scripts that still save time. Do not recreate deleted scaffolding unless requested. |
 | `docs/zh/` | Human-editable Chinese source docs. |
 | `docs/` | Derived English agent context. |
-| `.codex/private/` | Local private agent plans and roadmap notes; ignored by Git. |
+| `.codex/private/` | Local private plans, references, and roadmap notes; ignored by Git. |
 | `third_party/` | Vendored code only when explicitly justified. |
 
-## Build/Test Contract
+## Documentation Rules
 
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/build.ps1
-powershell -ExecutionPolicy Bypass -File scripts/test.ps1
-```
+- Record stable decisions, kept modules, ownership boundaries, and integration constraints.
+- Remove stale or redundant documentation instead of preserving historical noise.
+- If the working tree and older docs disagree, update docs to match the user's current intent.
 
-- `scripts/build.ps1` configures and builds with CMake into `build/`.
-- `scripts/test.ps1` runs CTest from the same `build/` tree.
-- Prefer scripts over ad hoc commands.
+## Validation Rules
 
-## API Rules
-
-- Public APIs live under `include/helicon/`.
-- Do not expose Vulkan handles in public API; keep backend details in
-  `src/backends/vulkan/`.
-- Core RHI expresses portable resources, commands, bindings, pipelines,
-  framebuffers, and capability queries. Backend-specific advanced features must
-  go through extension boundaries.
-- Extend the C++ API conservatively and update tests/docs for behavior changes.
-
-## Change Rules
-
-- Make the smallest safe change that solves the task.
-- Update docs when behavior, dependencies, workflow, or structure changes.
-- If Chinese docs change, sync the matching English agent docs.
+- Do not assume every iteration must build or test successfully.
+- Build and test become standard requirements only after the relevant workflow is intentionally restored.
+- If validation is skipped, explain why.

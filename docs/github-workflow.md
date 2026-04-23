@@ -24,12 +24,16 @@ summary and description.
 - Identify untracked files and deleted files.
 - Detect unrelated or mixed-scope changes.
 - Check whether build/test validation has already run.
-- For code changes, prefer:
+- When the repo currently has a meaningful build/test baseline and the change
+  needs validation, prefer:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/build.ps1
 powershell -ExecutionPolicy Bypass -File scripts/test.ps1
 ```
+
+- If validation is intentionally skipped because the repo is still exploratory
+  or the current build/test setup is in flux, say that explicitly in the draft.
 
 ## Draft Output
 

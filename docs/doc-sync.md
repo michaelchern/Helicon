@@ -2,27 +2,20 @@
 
 This repository uses split-purpose documentation:
 
-- Chinese docs under `docs/zh/` are the human review and edit surface.
-- English docs under `docs/` are derived agent context for retrieval, planning,
-  implementation, and validation.
+- Chinese docs under `docs/zh/` are the human source of truth.
+- English docs under `docs/` are derived agent context.
 
-The English docs are not literal translations. They should preserve Chinese
-intent while optimizing for AI use.
+English docs are not literal translations. They should preserve intent while
+optimizing for search, planning, and execution.
 
-## Human Workflow To Preserve
+## Core Rules
 
-1. User reads Chinese docs.
-2. User reviews project behavior and accumulated AI context.
-3. User checks whether docs are inaccurate or stale.
-4. User edits Chinese docs.
-5. User asks the agent to sync English docs from Chinese intent.
-
-Do not ask the user to write English. The agent owns English normalization.
-
-## Source Of Truth
-
-If Chinese and English docs conflict, prefer the Chinese source and update the
-English target.
+- Read the Chinese source before editing the English target.
+- Do not ask the user to write English.
+- If Chinese and English conflict, prefer Chinese and update English.
+- Remove stale or redundant English context instead of preserving historical noise.
+- When docs change the workflow, structure, build assumptions, or validation
+  assumptions, update all affected pairs in the same change.
 
 ## Document Pairs
 
@@ -36,23 +29,17 @@ English target.
 | `docs/zh/doc-workflow.md` | `docs/doc-sync.md` |
 | `README-zh.md` | `README.md` |
 
-## Agent Sync Rules
+## English Doc Style
 
-- Read the Chinese source before editing the English target.
-- Read the current English target to preserve still-valid operational context.
-- Translate meaning, not sentence order.
-- Prefer concise headings, tables, checklists, path maps, and action rules.
-- Keep English docs optimized for search and execution, not narrative reading.
-- Preserve commands, file paths, public API names, target names, and script
-  names exactly.
-- When docs affect behavior, build, test, or structure, update all affected
-  paired docs in the same change.
+- Prefer concise headings, tables, checklists, and search-friendly rules.
+- Preserve commands, file paths, script names, and directory names exactly.
+- Record stable decisions, not brainstorming residue.
 
-## Expected Sync Summary
+## Sync Summary Expectations
 
-When reporting a sync, include:
+When reporting doc sync work, include:
 
-- Chinese source files reviewed or changed.
-- English target files updated.
-- Meaning preserved or normalized.
-- Validation performed.
+- Chinese source files reviewed or changed
+- English target files updated
+- What meaning was preserved or normalized
+- Validation performed or intentionally skipped

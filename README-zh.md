@@ -4,39 +4,23 @@
 
 # Helicon
 
-Helicon 是一个以 Codex 协作为主的 **纯 C++20** 高性能渲染核心。当前阶段聚焦
-Windows + Vulkan：提供 C++ RHI、最小 render graph 和无窗口离屏三角形渲染。
+[![zread](https://img.shields.io/badge/Ask_Zread-_.svg?style=flat&color=00b0aa&labelColor=000000&logo=data%3Aimage%2Fsvg%2Bxml%3Bbase64%2CPHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAxNiAxNiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTQuOTYxNTYgMS42MDAxSDIuMjQxNTZDMS44ODgxIDEuNjAwMSAxLjYwMTU2IDEuODg2NjQgMS42MDE1NiAyLjI0MDFWNC45NjAxQzEuNjAxNTYgNS4zMTM1NiAxLjg4ODEgNS42MDAxIDIuMjQxNTYgNS42MDAxSDQuOTYxNTZDNS4zMTUwMiA1LjYwMDEgNS42MDE1NiA1LjMxMzU2IDUuNjAxNTYgNC45NjAxVjIuMjQwMUM1LjYwMTU2IDEuODg2NjQgNS4zMTUwMiAxLjYwMDEgNC45NjE1NiAxLjYwMDFaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00Ljk2MTU2IDEwLjM5OTlIMi4yNDE1NkMxLjg4ODEgMTAuMzk5OSAxLjYwMTU2IDEwLjY4NjQgMS42MDE1NiAxMS4wMzk5VjEzLjc1OTlDMS42MDE1NiAxNC4xMTM0IDEuODg4MSAxNC4zOTk5IDIuMjQxNTYgMTQuMzk5OUg0Ljk2MTU2QzUuMzE1MDIgMTQuMzk5OSA1LjYwMTU2IDE0LjExMzQgNS42MDE1NiAxMy43NTk5VjExLjAzOTlDNS42MDE1NiAxMC42ODY0IDUuMzE1MDIgMTAuMzk5OSA0Ljk2MTU2IDEwLjM5OTlaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik0xMy43NTg0IDEuNjAwMUgxMS4wMzg0QzEwLjY4NSAxLjYwMDEgMTAuMzk4NCAxLjg4NjY0IDEwLjM5ODQgMi4yNDAxVjQuOTYwMUMxMC4zOTg0IDUuMzEzNTYgMTAuNjg1IDUuNjAwMSAxMS4wMzg0IDUuNjAwMUgxMy43NTg0QzE0LjExMTkgNS42MDAxIDE0LjM5ODQgNS4zMTM1NiAxNC4zOTg0IDQuOTYwMVYyLjI0MDFDMTQuMzk4NCAxLjg4NjY0IDE0LjExMTkgMS42MDAxIDEzLjc1ODQgMS42MDAxWiIgZmlsbD0iI2ZmZiIvPgo8cGF0aCBkPSJNNCAxMkwxMiA0TDQgMTJaIiBmaWxsPSIjZmZmIi8%2BCjxwYXRoIGQ9Ik00IDEyTDEyIDQiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLXdpZHRoPSIxLjUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8L3N2Zz4K&logoColor=ffffff)](https://zread.ai/michaelchern/Helicon)
 
-选择 C++20 的原因：
+Helicon 当前是一个以 Codex 协作为主的实验仓库，正在采用“先挑代码、再讨论设计、再持续整理”的开发方式。
 
-- 已满足当前 API 需要，例如 `std::span`、RAII、强类型枚举和现代标准库能力。
-- Visual Studio、CMake 和主流编译器支持成熟，适合现阶段迭代。
-- C++23 暂时不会明显简化 v0 渲染核心，反而会提高工具链门槛。
+## 当前工作方式
 
-当前 v0 能力：
+- 先把你想保留或想参考的代码复制进仓库。
+- 再和 AI 讨论规划、命名、边界、目录和取舍。
+- 在迭代里把稳定结论写进 `AGENTS.md`、`docs/zh/` 和 `docs/`。
+- 在框架、保留代码和依赖还没定型前，不强制要求 build/test 始终可用。
 
-- C++ API：`helicon::Context`、`Device`、`Queue`、`Buffer`、`Image`、`ShaderModule`、
-  `GraphicsPipeline`、`CommandList`。
-- Render graph v0：声明 RGBA8 color attachment、添加 pass、写入 color、执行内置三角形。
-- Vulkan 后端：无窗口离屏渲染、基础资源创建、命令提交、RGBA8 读回。
-- 示例：`helicon_triangle_graph` 会渲染三角形并输出 `triangle_graph.ppm`。
-
-## 快速开始（Windows / PowerShell）
-
-需要 CMake、Visual Studio C++ 工具链和 Vulkan SDK。
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/build.ps1
-powershell -ExecutionPolicy Bypass -File scripts/test.ps1
-```
-
-## 仓库文档
+## 建议先看
 
 - `docs/zh/architecture.md`
 - `docs/zh/project-structure.md`
+- `docs/zh/doc-workflow.md`
 - `docs/zh/build.md`
 - `docs/zh/testing.md`
-- `docs/zh/github-workflow.md`
-- `docs/zh/doc-workflow.md`
 
-中文文档是人的主入口和源说明；英文 `docs/` 是 Codex 使用的执行版上下文。
+中文文档是人的源说明；英文 `docs/` 是给 Agent 用的执行版上下文。

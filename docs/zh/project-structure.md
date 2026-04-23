@@ -1,16 +1,12 @@
 # 项目结构和 AI 沉淀说明
 
-这份文档是 Helicon 的项目地图。中文文档是给人看的源说明，英文 `docs/`
-是 Codex 使用的执行版上下文。
+这份文档是当前工作树的简化地图，用来帮助你和 AI 快速对齐上下文。
 
-## 建议先看什么
+## 当前使用方式
 
-1. `README-zh.md`：项目入口和快速开始。
-2. `docs/zh/architecture.md`：项目目标、边界和核心约定。
-3. `docs/zh/project-structure.md`：当前目录和 AI 沉淀说明，也就是本文。
-4. `docs/zh/build.md`：如何构建。
-5. `docs/zh/testing.md`：如何测试。
-6. `docs/zh/doc-workflow.md`：中文文档和英文 Agent 文档如何同步。
+- 这个仓库现在更像一个“候选代码整理区”，不是已经定版的工程骨架。
+- 推荐工作流是：挑代码、复制进仓库、讨论取舍、继续重组、把稳定结论写进文档。
+- 文档的目标是让后续更快接上，不是维护一份过度理想化的蓝图。
 
 ## 当前目录树
 
@@ -18,87 +14,63 @@
 Helicon/
 |-- .codex/
 |-- .github/
-|   `-- workflows/
 |-- docs/
 |   `-- zh/
 |-- examples/
 |   `-- triangle_graph/
 |-- include/
 |   `-- helicon/
-|       `-- helicon.hpp
+|       |-- common/
+|       |-- rhi.h
+|       |-- utils.h
+|       |-- validation.h
+|       `-- vulkan.h
 |-- scripts/
 |-- skills/
-|   |-- prepare-github-pr/
-|   |-- run-regression/
-|   `-- sync-docs/
 |-- src/
 |   |-- ast/
 |   |-- backends/
 |   |   |-- cuda/
 |   |   `-- vulkan/
-|   |-- dsl/
-|   |-- shaders/
-|   |-- render_graph.cpp
-|   |-- rhi.cpp
-|   `-- rhi_internal.hpp
+|   |       `-- vulkan_backend.cpp
+|   `-- dsl/
 |-- tests/
-|   |-- helicon_smoke_test.cpp
-|   `-- render_graph_test.cpp
 |-- third_party/
-|-- .clang-format
-|-- .gitignore
 |-- AGENTS.md
 |-- CMakeLists.txt
 |-- README.md
 `-- README-zh.md
 ```
 
-`build/`、`out/` 是 CMake 或 IDE 自动生成的构建目录，`.vs/` 是 Visual Studio
-本地工作目录，`.git/` 是 Git 内部目录。不要手动维护这些目录里的生成产物。
+`build/`、`out/`、`.vs/` 和 `.git/` 都属于生成目录或本地状态，不要手动维护其中产物。
 
 ## 目录职责
 
-| 路径 | 它是干什么的 |
+| 路径 | 当前含义 |
 | --- | --- |
-| `include/helicon/helicon.hpp` | C++20 主 API。定义 RHI façade、render graph 类型和错误类型。 |
-| `src/rhi.cpp` | C++ API façade 到后端接口的实现。 |
-| `src/render_graph.cpp` | 最小 render graph v0，实现 image/pass 声明、执行和读回。 |
-| `src/rhi_internal.hpp` | 内部后端接口，不能作为公共 API 使用。 |
-| `src/backends/vulkan/` | Vulkan 后端实现。公共 API 不暴露这里的 Vulkan 句柄。 |
-| `src/shaders/` | 内置预编译 shader 数据。 |
-| `src/ast/`、`src/dsl/` | Helicon Shader DSL 后续阶段预留。 |
-| `examples/triangle_graph/` | 无窗口三角形示例，输出 `triangle_graph.ppm`。 |
-| `tests/` | C++ smoke 和 C++ render graph 回归测试。 |
-| `scripts/` | 标准脚本入口，构建和测试优先用这里。 |
-| `skills/` | 仓库内的 AI 工作流沉淀。 |
-| `docs/zh/` | 中文源文档。 |
-| `docs/` | 英文 Agent 上下文，由中文同步而来。 |
-| `third_party/` | 第三方代码预留；新增依赖需要明确理由。 |
+| `AGENTS.md` | 仓库级 Agent 规则和工作方式。 |
+| `docs/zh/` | 给人看的中文源说明。 |
+| `docs/` | 给 Agent 用的英文执行上下文。 |
+| `include/helicon/` | 当前保留的公开头文件候选区。 |
+| `include/helicon/common/` | 共用底层类型、容器或工具的候选区。 |
+| `src/` | 当前实现和实验代码区域。 |
+| `src/backends/vulkan/` | 当前保留的 Vulkan 侧实现。 |
+| `src/ast/`、`src/dsl/`、`src/backends/cuda/` | 预留或占位目录；不要默认它们已经有稳定职责。 |
+| `examples/triangle_graph/` | 示例或临时验证入口。 |
+| `tests/` | 未来稳定后使用的验证目录；当前可以为空。 |
+| `scripts/` | 仍然值得保留的脚本入口。 |
+| `skills/` | 仓库内沉淀的 AI 工作流。 |
+| `third_party/` | 第三方代码预留区。 |
 
-## AI 沉淀放在哪里
+## 如何判断什么算“真实结构”
 
-| 位置 | 沉淀什么 |
-| --- | --- |
-| `AGENTS.md` | Agent 在这个仓库工作的总规则。 |
-| `docs/zh/` | 人维护的中文源说明。 |
-| `docs/` | AI 读取的英文执行上下文。 |
-| `skills/sync-docs/` | 中文到英文 Agent 文档同步工作流。 |
-| `skills/run-regression/` | 标准构建和测试工作流。 |
-| `skills/prepare-github-pr/` | 提交和 PR 草稿工作流。 |
-| `scripts/` | 人、AI、CI 共用的命令入口。 |
-| `tests/` | 用测试固定重要行为。 |
+- 优先看实际文件和最新文档，不要从旧 README、旧 CMake 或旧测试假设反推当前状态。
+- 只有 `.gitkeep` 的目录一律视为预留，不视为已落地模块。
+- 如果 `CMakeLists.txt`、脚本和工作树不一致，先尊重当前工作树和你的意图，再决定是否恢复构建。
 
-## 脚本是干什么的
+## 建议沉淀什么
 
-| 脚本 | 作用 |
-| --- | --- |
-| `scripts/build.ps1` | 标准构建入口：检查 `cmake`，在 `build/` 配置并构建项目。 |
-| `scripts/test.ps1` | 标准测试入口：检查 `ctest`，确认 `build/` 存在，然后运行 CTest。 |
-
-## 维护约定
-
-- 项目使用 C++20，不再保留 C 源文件或 C ABI。
-- 目录职责要尽量单一：接口放 `include/helicon/`，实现放 `src/`，测试放 `tests/`，脚本放 `scripts/`。
-- Vulkan 后端细节留在 `src/backends/vulkan/`；不要泄露 Vulkan 句柄到公共 API。
-- 行为、目录、依赖或流程变化时，先更新中文文档，再同步英文文档。
-- 不要手动修改 `build/`、`out/`、`.vs/` 或 `.git/`。
+- 哪些模块决定留下。
+- 哪些命名和目录边界已经定了。
+- 哪些依赖值得继续保留。
+- 哪些构建/测试约定已经恢复为真实流程。

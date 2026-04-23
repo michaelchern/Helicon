@@ -1,48 +1,34 @@
 # Agent Context: Build
 
-Human source: `docs/zh/build.md`. Use this file for build prerequisites,
-canonical commands, outputs, and failure routing.
+Human source: `docs/zh/build.md`. Use this file as guidance for an
+in-transition build setup, not as a guarantee that the repo currently builds.
 
-## Canonical Command
+## Current State
+
+- There is no stable build baseline yet.
+- `scripts/build.ps1` and `CMakeLists.txt` are retained reference points.
+- If the working tree intentionally removed or replaced files, build failure may
+  simply mean the build layer has not been updated yet.
+
+## Reference Command
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/build.ps1
 ```
 
-Do not invent a new build command unless the task explicitly requires bypassing
-the standard script.
+Use it when the user explicitly wants to inspect, repair, or restore the build
+workflow.
 
-## Prerequisites
+## Interpretation Rules
 
-- CMake `>= 3.20`
-- A C++20 compiler toolchain available to CMake
-- On Windows: Visual Studio Build Tools or Visual Studio with C++ workload
-- Vulkan SDK discoverable by CMake as `Vulkan::Vulkan`
+- Do not assume the repository must stay buildable during every iteration.
+- Prefer the working tree and user intent over stale build scaffolding.
+- Convert build details into hard rules only after the build flow is explicitly
+  stabilized.
 
-## Build Script Contract
+## What A Stable Build Doc Must Eventually Define
 
-`scripts/build.ps1`:
-
-1. Resolves repository root from the script location.
-2. Uses `build/` as the CMake build directory.
-3. Uses `RelWithDebInfo` as the build type.
-4. Verifies `cmake` is available.
-5. Runs CMake configure.
-6. Runs CMake build.
-
-## Expected Targets
-
-- `helicon`: pure C++20 static library with RHI, render graph, and Vulkan backend.
-- `helicon_tests`: C++ smoke test.
-- `helicon_render_graph_tests`: C++ Vulkan/render graph regression test.
-- `helicon_triangle_graph`: example executable when `HELICON_BUILD_EXAMPLES=ON`.
-
-## Failure Routing
-
-| Symptom | Check |
-| --- | --- |
-| `cmake` not found | Install CMake and ensure it is on `PATH`. |
-| compiler not found | Install a C++20 toolchain. |
-| Vulkan not found | Install Vulkan SDK and ensure CMake can find `Vulkan::Vulkan`. |
-| target/source missing | Check `CMakeLists.txt` against actual files. |
-| generated files stale | Remove `build/` and rerun `scripts/build.ps1`. |
+- Kept targets and directories
+- Required external dependencies
+- One canonical build entry point
+- First failure checks

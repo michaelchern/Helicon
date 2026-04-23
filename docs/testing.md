@@ -1,39 +1,38 @@
 # Agent Context: Testing
 
-Human source: `docs/zh/testing.md`. Use this file for the standard validation
-entry point and failure triage.
+Human source: `docs/zh/testing.md`. Use this file to understand that validation
+is currently conditional, not mandatory.
 
-## Canonical Command
+## Current State
+
+- There is no stable test baseline yet.
+- Daily iteration may intentionally skip tests while the framework, kept code,
+  and directory boundaries are still in flux.
+- Old test assumptions should not be treated as active requirements.
+
+## Reference Command
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/test.ps1
 ```
 
-Run `scripts/build.ps1` first when build outputs may be missing or stale.
+Usually paired with:
 
-## Test Contract
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/build.ps1
+```
 
-- `tests/helicon_smoke_test.cpp`: C++ smoke test for version, status strings, and
-  backend availability query.
-- `tests/render_graph_test.cpp`: C++ RHI/render graph regression. When Vulkan is
-  available, it creates a device, buffer, image, command list, clear-only pass,
-  builtin triangle pass, and validates RGBA8 readback pixels.
-- If no Vulkan device is available, the GPU portion skips and passes. Building
-  still requires the Vulkan SDK.
-- Test runner: CTest.
-- Build directory: `build/`.
-- Expected local and CI entry point: `scripts/test.ps1`.
+Use these only when the user explicitly wants to restore or inspect the
+validation workflow.
 
-## Pass Criteria
+## What To Report
 
-- `scripts/build.ps1` succeeds.
-- `scripts/test.ps1` reports all tests passed.
+- Whether validation was run
+- If skipped, why it was skipped
+- What needs to stabilize before tests become meaningful again
 
-## Failure Triage
+## Better Validation During Exploration
 
-1. Re-run `scripts/build.ps1`.
-2. Re-run `scripts/test.ps1`.
-3. Inspect the first failing CTest output.
-4. For Vulkan initialization failures, check Vulkan SDK, drivers, and device
-   availability.
-5. Fix the smallest affected code area and update tests when behavior changes.
+- Check whether copied-in files still match the current plan
+- Check directory ownership and naming consistency
+- Record why a module should stay, change, or be removed

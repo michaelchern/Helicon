@@ -1,48 +1,28 @@
 <p align="center">
-  <a href="./README.md">English</a> | <a href="./README-zh.md">简体中文</a>
+  <a href="./README.md">English</a> | <a href="./README-zh.md">Simplified Chinese</a>
 </p>
 
 # Helicon
 
-Helicon is a Codex-first **pure C++20** high-performance rendering core. The
-current v0 targets Windows + Vulkan with a C++ RHI facade, a minimal render
-graph, and headless offscreen triangle rendering.
+Helicon is a Codex-first exploratory repository. The current workflow is to
+copy in candidate code, discuss the design and trade-offs with AI, and keep
+only the pieces that survive iteration.
 
-Why C++20:
+## Current Workflow
 
-- It covers the current API needs, including `std::span`, RAII, strong enums,
-  and modern standard-library facilities.
-- Visual Studio, CMake, and mainstream compilers support it well.
-- C++23 does not yet simplify the v0 rendering core enough to justify the
-  higher toolchain floor.
+- Copy in the code you want to keep or evaluate.
+- Use AI to iterate on design, naming, boundaries, and integration.
+- Record stable decisions in `AGENTS.md`, `docs/zh/`, and `docs/`.
+- Do not assume build and test workflows are always active while the framework,
+  retained code, and dependencies are still in flux.
 
-Current capabilities:
-
-- C++ API for `helicon::Context`, `Device`, `Queue`, `Buffer`, `Image`,
-  `ShaderModule`, `GraphicsPipeline`, and `CommandList`.
-- Render graph v0 for RGBA8 color attachments, pass declaration, color writes,
-  and an embedded builtin triangle draw.
-- Vulkan backend for headless offscreen rendering, basic resource creation,
-  command submission, and RGBA8 readback.
-- `helicon_triangle_graph` example that writes `triangle_graph.ppm`.
-
-## Quickstart (Windows / PowerShell)
-
-Requires CMake, a Visual Studio C++ toolchain, and the Vulkan SDK.
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts/build.ps1
-powershell -ExecutionPolicy Bypass -File scripts/test.ps1
-```
-
-## Repository Docs
+## Suggested Reading
 
 - `docs/architecture.md`
 - `docs/project-structure.md`
+- `docs/doc-sync.md`
 - `docs/build.md`
 - `docs/testing.md`
-- `docs/github-workflow.md`
-- `docs/doc-sync.md`
 
 Chinese docs under `docs/zh/` are the human source of truth. English docs under
 `docs/` are derived operational context for agents.

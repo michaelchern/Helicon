@@ -1,33 +1,35 @@
 # 测试说明
 
-## 标准测试命令
+## 当前状态
+
+当前没有稳定的标准测试基线。因为框架、保留代码和目录边界还在变化，日常迭代可以不跑测试。
+
+## 当前原则
+
+- 不为了“流程完整”补测试。
+- 不把旧测试文件或旧测试说明当成当前真实约束。
+- 如果这次没有测试，要在变更说明里直接写清楚原因。
+
+## 现有参考入口
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/test.ps1
 ```
 
-如果构建产物不存在或可能过期，先运行：
+如果后续真的要恢复测试流程，通常也会一起检查：
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/build.ps1
 ```
 
-## 当前测试策略
+## 什么时候再恢复测试要求
 
-- `tests/helicon_smoke_test.cpp`：C++ smoke 测试，验证版本、状态字符串和后端可用性查询。
-- `tests/render_graph_test.cpp`：C++ RHI/render graph 回归测试。Vulkan 后端可用时会创建 device、buffer、image、
-  command list，执行 clear-only pass 和内置三角形 pass，并检查 RGBA8 readback 像素。
-- 如果机器没有可用 Vulkan 设备，C++ GPU 回归会跳过 GPU 部分并通过；构建仍需要 Vulkan SDK。
+- 某个模块已经过了几轮筛选，确定会保留。
+- 接口边界相对稳定，不会下一轮马上推翻。
+- 构建链路已经收敛到可重复执行。
 
-## 通过标准
+## 当前更有价值的验证
 
-- `scripts/build.ps1` 成功。
-- `scripts/test.ps1` 显示所有 CTest 测试通过。
-
-## 排查流程
-
-1. 重新运行 `scripts/build.ps1`。
-2. 重新运行 `scripts/test.ps1`。
-3. 先看第一个失败测试的输出。
-4. 如果是 Vulkan 初始化失败，先确认 Vulkan SDK、驱动和 GPU/软件 Vulkan 设备是否可用。
-5. 只修改最小受影响代码区域。
+- 确认目录、文件和命名是否和规划一致。
+- 确认复制进仓库的代码是否真的值得保留。
+- 记录跳过测试的原因，以及后续恢复测试前需要先稳定什么。

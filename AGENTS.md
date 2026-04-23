@@ -2,17 +2,21 @@
 
 ## Project purpose
 This repository is developed with Codex as the primary coding agent.
-The project should remain easy to build, test, and maintain.
+The project is currently in an exploratory assembly phase: the user may copy
+candidate code into the repo, then iterate with Codex on planning, cleanup,
+integration, and design.
+Stable decisions should be captured in agent docs so later work needs less
+repeated context.
 
 ## How to work in this repo
 Before making changes:
 1. Read docs/architecture.md
 2. Read docs/project-structure.md
-3. Read docs/build.md if the change touches build configuration or validation
-4. Read docs/testing.md if the change touches code, tests, or validation
+3. Read docs/build.md if the change touches build setup, CMake, or build assumptions
+4. Read docs/testing.md if the change touches validation strategy, tests, or test assumptions
 5. Read docs/doc-sync.md if the change touches documentation or project guidance
 6. Read docs/github-workflow.md if preparing commits, pushes, or pull requests
-7. Prefer existing scripts in /scripts instead of inventing shell commands
+7. Prefer existing scripts in /scripts when they are still relevant; do not recreate deleted scaffolding unless requested
 
 ## Documentation language workflow
 - Human-editable Chinese source docs live under docs/zh/
@@ -22,33 +26,40 @@ Before making changes:
 - Keep Chinese docs friendly for humans and English docs concise for automation context
 - English docs are derived agent context, not literal translations; optimize them for search and action
 
+## Working mode
+- Treat copied-in code as candidate material until the user keeps it through review and iteration
+- Favor documenting stable decisions, kept modules, directory ownership, and integration constraints
+- Remove stale or redundant documentation instead of preserving historical noise
+- When the repo structure and docs disagree, update docs to match the user's current intent and working tree
+
 ## Coding rules
 - Make the smallest safe change that solves the task
 - Do not rename public APIs unless necessary
 - Do not add dependencies unless justified
 - Keep changes local and easy to review
-- Update docs when behavior changes
+- Update docs when behavior or workflow changes
 
 ## Validation rules
-After code changes:
-1. Run scripts/build.ps1
-2. Run scripts/test.ps1
-3. Summarize what changed
-4. Summarize what was validated
-5. List risks or follow-up work if any
+After code or workflow changes:
+1. Decide whether the current repository state is buildable and testable
+2. Run scripts/build.ps1 and scripts/test.ps1 only when that workflow is real and the user wants validation
+3. If validation is skipped, state the reason clearly
+4. Summarize what changed
+5. Summarize what was validated or intentionally not validated
+6. List risks or follow-up work if any
 
 ## Bug fixing rules
 When fixing a bug:
 1. State the suspected root cause first
 2. Identify the smallest code area to change
 3. Prefer one fix at a time
-4. Explain how the fix was validated
+4. Explain how the fix was validated or why validation was skipped
 
 ## Pull request output
 When preparing a PR, include:
 - Summary
 - Why this change is needed
-- Validation performed
+- Validation performed or why validation was skipped
 - Risks / follow-ups
 
 Before committing, pushing, or opening a PR:

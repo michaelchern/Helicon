@@ -1,36 +1,34 @@
 # 构建说明
 
-## 前置要求
+## 当前状态
 
-- CMake `>= 3.20`
-- 一个能被 CMake 找到的 C++20 编译工具链
-- Windows 上推荐安装 Visual Studio Build Tools 或带 C++ 工作负载的 Visual Studio
-- Vulkan SDK，用于编译和链接 Vulkan 后端
+当前仓库没有稳定的标准构建基线。`CMakeLists.txt` 和 `scripts/build.ps1` 仍可作为参考入口，
+但它们不应被当成“当前一定可用”的契约。
 
-## 标准构建命令
+## 什么时候才需要看这份文档
+
+- 你明确要修复或重建构建流程时。
+- 需要判断现有脚本是否还值得保留时。
+- 需要把某次迭代收敛成可重复构建的里程碑时。
+
+## 当前原则
+
+- 不为了满足流程而强行保持“随时可构建”。
+- 如果工作树里有意删除、替换或重组文件，先尊重这次结构调整，再决定如何恢复构建。
+- 只有当构建链路稳定下来，才把命令、依赖和产物写成硬约束。
+
+## 现有参考入口
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/build.ps1
 ```
 
-## 构建脚本做什么
+- 该脚本当前只是保留的参考入口。
+- 如果 `CMakeLists.txt` 与工作树不一致，构建失败并不一定代表本次迭代有问题。
 
-1. 在 `build/` 目录配置 CMake。
-2. 查找 Vulkan SDK。
-3. 构建 `helicon` 静态库。
-4. 构建 `helicon_tests` C++ smoke 测试程序。
-5. 构建 `helicon_render_graph_tests` C++ render graph 测试程序。
-6. 默认构建 `helicon_triangle_graph` 示例。
+## 后续收敛时至少要补齐
 
-## 预期产物
-
-- `build/` 下生成 `helicon` 静态库。
-- `build/` 下生成测试可执行文件。
-- `build/` 下生成三角形示例可执行文件。
-
-## 常见失败
-
-- 找不到 `cmake`：安装 CMake，并确认它在 `PATH` 里。
-- 找不到编译器：安装受支持的 C++20 工具链。
-- 找不到 Vulkan：安装 Vulkan SDK，并确认 CMake 能找到 `Vulkan::Vulkan`。
-- 目标或源文件不存在：检查 `CMakeLists.txt` 和真实目录是否一致。
+- 哪些目录和目标是真正保留的
+- 需要哪些外部依赖
+- 哪条命令是唯一标准入口
+- 失败后先检查什么
