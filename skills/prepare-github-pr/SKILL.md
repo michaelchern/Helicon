@@ -34,10 +34,28 @@ Include:
 - Why this change is needed
 - Validation performed
 - Risks / follow-ups
-- Proposed commit message
+- Proposed Conventional Commits message
 - Proposed PR title
 - Proposed PR description
 - Files proposed for staging
+
+# Commit message rules
+
+Use Conventional Commits exactly:
+
+```text
+<type>(<optional scope>): <subject>
+```
+
+- Allowed `type`: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
+  `chore`.
+- `type` must be lowercase English.
+- `subject` must be Chinese, imperative, present tense, concise, and preferably
+  under 50 Chinese characters.
+- Examples:
+  - `refactor(layout): 重组硬件抽象层目录结构`
+  - `feat(shader): 增加着色器编译工具目标`
+  - `docs(architecture): 补充引擎集成说明`
 
 # Write safety
 
@@ -46,6 +64,7 @@ Include:
 - Prefer explicit file paths when staging.
 - Use `git add -A` only when the user confirms the whole worktree belongs in
   scope.
+- Never commit with a message that violates the commit message rules above.
 - Default to a draft PR unless the user explicitly asks for ready-for-review.
 - Stop and report blockers for missing GitHub auth, missing remote, failed
   validation, or unclear scope.

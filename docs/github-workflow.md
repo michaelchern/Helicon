@@ -39,10 +39,33 @@ Before any commit or push, provide:
 - Why this change is needed.
 - Validation performed.
 - Risks or follow-ups.
-- Proposed commit message.
+- Proposed Conventional Commits message.
 - Proposed PR title.
 - Proposed PR description.
 - Files proposed for staging.
+
+## Commit Message Contract
+
+All Git commit messages must follow Conventional Commits:
+
+```text
+<type>(<optional scope>): <subject>
+```
+
+Rules:
+
+- `type` must be one of: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`,
+  `test`, `chore`.
+- `type` must be lowercase English.
+- `scope` is optional and should be concise when used.
+- `subject` must be Chinese, imperative, present tense, and preferably under 50
+  Chinese characters.
+
+Examples:
+
+- `refactor(layout): 重组硬件抽象层目录结构`
+- `feat(shader): 增加着色器编译工具目标`
+- `docs(architecture): 补充引擎集成说明`
 
 ## Approval Gate
 
@@ -63,7 +86,7 @@ After confirmation:
 - Stage only the confirmed files.
 - Avoid `git add -A` unless the user confirms the whole worktree belongs in
   scope.
-- Commit with the approved message.
+- Commit with the approved Conventional Commits message.
 - Push to a branch.
 - Open a draft PR by default.
 - Use a ready-for-review PR only when explicitly requested.

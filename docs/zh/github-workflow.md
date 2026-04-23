@@ -34,10 +34,43 @@ Codex 应该先做这些事：
 - 为什么需要这个改动。
 - 验证情况。
 - 风险或后续事项。
-- 建议的 commit message。
+- 符合 Conventional Commits 的建议 commit message。
 - 建议的 PR title。
 - 建议的 PR description。
 - 准备纳入提交的文件列表。
+
+## 提交信息规范
+
+提交信息必须严格遵循 Conventional Commits，并使用以下格式：
+
+```text
+<type>(<optional scope>): <subject>
+```
+
+要求：
+
+- `type` 必须使用英文小写关键词。
+- `subject` 使用祈使句、现在时。
+- `subject` 内容使用中文，保持简洁，建议 50 字以内。
+
+允许的 `type`：
+
+| Type | 含义 | 使用场景 |
+| :--- | :--- | :--- |
+| `feat` | 新功能 | 引入用户可感知的新能力 |
+| `fix` | 缺陷修复 | 修复 Bug |
+| `docs` | 文档更新 | 只修改文档 |
+| `style` | 代码样式 | 格式、空格、缩进等，不改变逻辑 |
+| `refactor` | 重构 | 调整结构，不新增功能、不修复 Bug |
+| `perf` | 性能优化 | 明确改善性能 |
+| `test` | 测试相关 | 增加或修改测试 |
+| `chore` | 杂项维护 | 构建、脚本、依赖等维护 |
+
+示例：
+
+- `refactor(layout): 重组硬件抽象层目录结构`
+- `feat(shader): 增加着色器编译工具目标`
+- `docs(architecture): 补充引擎集成说明`
 
 ### 3. 你校对并确认
 
@@ -62,7 +95,7 @@ PR 描述再写得短一点。
 确认后，Codex 才可以：
 
 1. 只 stage 本次确认范围内的文件。
-2. 创建 commit。
+2. 使用已确认且符合 Conventional Commits 的信息创建 commit。
 3. push 到 GitHub 分支。
 4. 创建 draft PR。
 5. 返回 PR 链接、分支名、commit、验证结果。
