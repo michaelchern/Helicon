@@ -19,12 +19,12 @@ Helicon/
 |-- examples/
 |   `-- triangle_graph/
 |-- include/
-|   `-- helicon/
-|       |-- common/
-|       |-- rhi.h
-|       |-- utils.h
-|       |-- validation.h
-|       `-- vulkan.h
+|   |-- common/
+|   |-- rhi.h
+|   |-- rhiHLSL.h
+|   |-- utils.h
+|   |-- validation.h
+|   `-- vulkan.h
 |-- scripts/
 |-- skills/
 |-- src/
@@ -51,8 +51,9 @@ Helicon/
 | `AGENTS.md` | 仓库级 Agent 规则和工作方式。 |
 | `docs/zh/` | 给人看的中文源说明。 |
 | `docs/` | 给 Agent 用的英文执行上下文。 |
-| `include/helicon/` | 当前保留的公开头文件候选区。 |
-| `include/helicon/common/` | 共用底层类型、容器或工具的候选区。 |
+| `include/` | 当前保留的公开头文件候选区。 |
+| `include/common/` | 共用底层类型、容器或工具的候选区。 |
+| `include/utils.h` | 当前工具函数头文件；格式化时先保留现有文件头模板、注释结构和局部排版习惯。 |
 | `src/` | 当前实现和实验代码区域。 |
 | `src/backends/vulkan/` | 当前保留的 Vulkan 侧实现。 |
 | `src/ast/`、`src/dsl/`、`src/backends/cuda/` | 预留或占位目录；不要默认它们已经有稳定职责。 |
@@ -74,3 +75,4 @@ Helicon/
 - 哪些命名和目录边界已经定了。
 - 哪些依赖值得继续保留。
 - 哪些构建/测试约定已经恢复为真实流程。
+- 在全局格式化风格确定前，哪些文件要优先遵循各自现有的注释和头模板。

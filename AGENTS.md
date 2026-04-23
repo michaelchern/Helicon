@@ -38,6 +38,9 @@ Before making changes:
 - Do not add dependencies unless justified
 - Keep changes local and easy to review
 - Update docs when behavior or workflow changes
+- When formatting code in a file whose global style is not finalized yet, preserve the file's existing header banner, comment structure, and local layout conventions
+- For `include/utils.h`, treat the current file header template and existing comments as the formatting baseline; do not rewrite them unless the user explicitly asks
+- Do not perform repo-wide style normalization, indentation unification, or comment-style conversion until the user defines the formatter/style contract
 
 ## Validation rules
 After code or workflow changes:

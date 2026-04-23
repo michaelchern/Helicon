@@ -21,12 +21,12 @@ Helicon/
 |-- examples/
 |   `-- triangle_graph/
 |-- include/
-|   `-- helicon/
-|       |-- common/
-|       |-- rhi.h
-|       |-- utils.h
-|       |-- validation.h
-|       `-- vulkan.h
+|   |-- common/
+|   |-- rhi.h
+|   |-- rhiHLSL.h
+|   |-- utils.h
+|   |-- validation.h
+|   `-- vulkan.h
 |-- scripts/
 |-- skills/
 |-- src/
@@ -58,8 +58,9 @@ Generated/local directories:
 | `AGENTS.md` | Repo-level agent workflow and constraints. |
 | `docs/zh/` | Human-editable Chinese source docs. |
 | `docs/` | Derived English agent context. |
-| `include/helicon/` | Current public-header candidate area. |
-| `include/helicon/common/` | Shared low-level helpers and types under evaluation. |
+| `include/` | Current public-header candidate area. |
+| `include/common/` | Shared low-level helpers and types under evaluation. |
+| `include/utils.h` | Current utility-header candidate. When formatting it, preserve the existing file banner, comment structure, and local layout style. |
 | `src/` | Current implementation and experiment area. |
 | `src/backends/vulkan/` | Current Vulkan-side implementation area. |
 | `src/ast/`, `src/dsl/`, `src/backends/cuda/` | Reserved or placeholder directories. Do not assume active functionality. |
@@ -75,8 +76,9 @@ Generated/local directories:
 | --- | --- | --- |
 | Understand current workflow | `docs/architecture.md` | `AGENTS.md` |
 | Confirm actual structure | `docs/project-structure.md` | working tree |
-| Header/API candidate work | `include/helicon/` | `docs/architecture.md` |
-| Vulkan-side work | `src/backends/vulkan/` | `include/helicon/` |
+| Header/API candidate work | `include/` | `docs/architecture.md` |
+| `utils.h` formatting or cleanup | `include/utils.h` | `AGENTS.md` |
+| Vulkan-side work | `src/backends/vulkan/` | `include/` |
 | Example/scratch behavior | `examples/triangle_graph/` | `README.md` |
 | Build assumptions | `docs/build.md` | `scripts/build.ps1`, `CMakeLists.txt` |
 | Validation assumptions | `docs/testing.md` | `scripts/test.ps1`, `tests/` |
@@ -87,3 +89,4 @@ Generated/local directories:
 - Prefer actual files plus the latest docs over stale assumptions from older scaffolding.
 - A directory that only contains `.gitkeep` is reserved, not implemented.
 - If `CMakeLists.txt`, scripts, and the working tree disagree, treat the working tree and user intent as primary until build work is explicitly requested.
+- Before a repo-wide formatter contract exists, prefer file-local formatting conventions over invented normalization.

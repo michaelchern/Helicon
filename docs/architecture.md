@@ -31,7 +31,7 @@ should record only stable decisions that survived review and iteration.
 
 | Area | Contract |
 | --- | --- |
-| `include/helicon/` | Current public-header candidate area. Do not treat it as a stable API promise unless the docs say so. |
+| `include/` | Current public-header candidate area. Do not treat it as a stable API promise unless the docs say so. |
 | `src/` | Current implementation and experiment area. Transitional structure is allowed. |
 | `examples/` | Example or scratch entry points. Long-term status may change. |
 | `tests/` | Reserved for future stable validation. It may be empty during exploration. |
