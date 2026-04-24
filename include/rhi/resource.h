@@ -371,8 +371,8 @@ namespace helicon
 
         bool operator ==(const TextureSubresourceSet& other) const
         {
-            return baseMipLevel == other.baseMipLevel &&
-                   numMipLevels == other.numMipLevels &&
+            return baseMipLevel   == other.baseMipLevel &&
+                   numMipLevels   == other.numMipLevels &&
                    baseArraySlice == other.baseArraySlice &&
                    numArraySlices == other.numArraySlices;
         }
