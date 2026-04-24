@@ -1,3 +1,13 @@
+// ============================================================================
+// @file        ResourceTypes.h
+// @brief       Core resource descriptors and interfaces for the Helicon RHI (Helicon RHI 核心资源描述符与接口)
+// @project     Helicon
+// @author      Michael Chern <1216866818@qq.com>
+// @date        2026-04-24
+//
+// Copyright (c) 2025-2026 Michael Chern. All rights reserved.
+// ============================================================================
+
 #pragma once
 
 #include <nvrhi/abi.h>
@@ -6,12 +16,20 @@
 #include <string>
 #include <vector>
 
-namespace nvrhi
+namespace helicon
 {
     //////////////////////////////////////////////////////////////////////////
     // Heap
     //////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @enum HeapType
+     * @brief Type of GPU memory heap.
+     *
+     * @par 中文说明：
+     *      GPU 内存堆的类型：DeviceLocal 表示显存，Upload 用于 CPU 到 GPU 数据传输，
+     *      Readback 用于 GPU 到 CPU 的回读。
+     */
     enum class HeapType : uint8_t
     {
         DeviceLocal,
@@ -19,17 +37,31 @@ namespace nvrhi
         Readback
     };
 
+    /**
+     * @struct HeapDesc
+     * @brief Description for creating a heap.
+     *
+     * @par 中文说明：
+     *      创建堆的描述结构，包含容量、类型和调试名称。
+     */
     struct HeapDesc
     {
-        uint64_t capacity = 0;
-        HeapType type;
-        std::string debugName;
+        uint64_t capacity = 0;           ///< Capacity in bytes.
+        HeapType type;                   ///< Heap type.
+        std::string debugName;           ///< Debug name for the heap.
 
         constexpr HeapDesc& setCapacity(uint64_t value) { capacity = value; return *this; }
         constexpr HeapDesc& setType(HeapType value) { type = value; return *this; }
                   HeapDesc& setDebugName(const std::string& value) { debugName = value; return *this; }
     };
 
+    /**
+     * @class IHeap
+     * @brief Interface for a GPU heap resource.
+     *
+     * @par 中文说明：
+     *      GPU 堆的接口，继承自 IResource，可获取堆描述信息。
+     */
     class IHeap : public IResource
     {
     public:
@@ -38,16 +70,30 @@ namespace nvrhi
 
     typedef RefCountPtr<IHeap> HeapHandle;
 
+    /**
+     * @struct MemoryRequirements
+     * @brief Memory size and alignment requirements for a resource.
+     *
+     * @par 中文说明：
+     *      资源的内存大小和对齐要求。
+     */
     struct MemoryRequirements
     {
-        uint64_t size = 0;
-        uint64_t alignment = 0;
+        uint64_t size = 0;      ///< Required size in bytes.
+        uint64_t alignment = 0; ///< Required alignment in bytes.
     };
 
     //////////////////////////////////////////////////////////////////////////
     // Texture
     //////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @enum TextureDimension
+     * @brief Dimensionality of a texture resource.
+     *
+     * @par 中文说明：
+     *      纹理的维度类型，如 1D、2D、3D、立方体等。
+     */
     enum class TextureDimension : uint8_t
     {
         Unknown,
@@ -62,41 +108,56 @@ namespace nvrhi
         Texture3D
     };
 
+    /**
+     * @enum CpuAccessMode
+     * @brief Specifies CPU access level for a resource.
+     *
+     * @par 中文说明：
+     *      资源允许的 CPU 访问方式：无、读、写。
+     */
     enum class CpuAccessMode : uint8_t
     {
         None,
         Read,
         Write
     };
-    
+
+    /**
+     * @enum ResourceStates
+     * @brief Resource state flags used for pipeline state tracking.
+     *
+     * @par 中文说明：
+     *      资源状态标志，用于管线状态跟踪，如着色器资源、渲染目标、深度读写等。
+     *      支持按位组合。
+     */
     enum class ResourceStates : uint32_t
     {
-        Unknown                     = 0,
-        Common                      = 0x00000001,
-        ConstantBuffer              = 0x00000002,
-        VertexBuffer                = 0x00000004,
-        IndexBuffer                 = 0x00000008,
-        IndirectArgument            = 0x00000010,
-        ShaderResource              = 0x00000020,
-        UnorderedAccess             = 0x00000040,
-        RenderTarget                = 0x00000080,
-        DepthWrite                  = 0x00000100,
-        DepthRead                   = 0x00000200,
-        StreamOut                   = 0x00000400,
-        CopyDest                    = 0x00000800,
-        CopySource                  = 0x00001000,
-        ResolveDest                 = 0x00002000,
-        ResolveSource               = 0x00004000,
-        Present                     = 0x00008000,
-        AccelStructRead             = 0x00010000,
-        AccelStructWrite            = 0x00020000,
-        AccelStructBuildInput       = 0x00040000,
-        AccelStructBuildBlas        = 0x00080000,
-        ShadingRateSurface          = 0x00100000,
-        OpacityMicromapWrite        = 0x00200000,
-        OpacityMicromapBuildInput   = 0x00400000,
-        ConvertCoopVecMatrixInput   = 0x00800000,
-        ConvertCoopVecMatrixOutput  = 0x01000000,
+        Unknown                    = 0,
+        Common                     = 0x00000001,
+        ConstantBuffer             = 0x00000002,
+        VertexBuffer               = 0x00000004,
+        IndexBuffer                = 0x00000008,
+        IndirectArgument           = 0x00000010,
+        ShaderResource             = 0x00000020,
+        UnorderedAccess            = 0x00000040,
+        RenderTarget               = 0x00000080,
+        DepthWrite                 = 0x00000100,
+        DepthRead                  = 0x00000200,
+        StreamOut                  = 0x00000400,
+        CopyDest                   = 0x00000800,
+        CopySource                 = 0x00001000,
+        ResolveDest                = 0x00002000,
+        ResolveSource              = 0x00004000,
+        Present                    = 0x00008000,
+        AccelStructRead            = 0x00010000,
+        AccelStructWrite           = 0x00020000,
+        AccelStructBuildInput      = 0x00040000,
+        AccelStructBuildBlas       = 0x00080000,
+        ShadingRateSurface         = 0x00100000,
+        OpacityMicromapWrite       = 0x00200000,
+        OpacityMicromapBuildInput  = 0x00400000,
+        ConvertCoopVecMatrixInput  = 0x00800000,
+        ConvertCoopVecMatrixOutput = 0x01000000,
     };
 
     NVRHI_ENUM_CLASS_FLAG_OPERATORS(ResourceStates)
@@ -104,7 +165,16 @@ namespace nvrhi
     typedef uint32_t MipLevel;
     typedef uint32_t ArraySlice;
 
-    // Flags for resources that need to be shared with other graphics APIs or other GPU devices.
+    /**
+     * @enum SharedResourceFlags
+     * @brief Flags for resources that need to be shared with other graphics APIs or other GPU devices.
+     *
+     * @par 中文说明：
+     *      资源共享标志，用于跨 API 或多 GPU 设备间的共享。
+     *      - Shared: 基本共享。
+     *      - Shared_NTHandle: 使用 NT 句柄共享（D3D11 特有）。
+     *      - Shared_CrossAdapter: 跨适配器共享（D3D12 特有）。
+     */
     enum class SharedResourceFlags : uint32_t
     {
         None                = 0,
@@ -125,6 +195,17 @@ namespace nvrhi
 
     NVRHI_ENUM_CLASS_FLAG_OPERATORS(SharedResourceFlags)
 
+    /**
+     * @struct TextureDesc
+     * @brief Descriptor for creating a texture resource.
+     *
+     * Provides detailed configuration for textures, including dimensions, format,
+     * usage flags, initial state, and automatic state tracking.
+     *
+     * @par 中文说明：
+     *      纹理创建描述结构，包含尺寸、格式、用途标志、初始状态等。
+     *      提供 setter 链式调用和自动状态跟踪开关。
+     */
     struct TextureDesc
     {
         uint32_t width = 1;
@@ -138,7 +219,7 @@ namespace nvrhi
         TextureDimension dimension = TextureDimension::Texture2D;
         std::string debugName;
 
-        bool isShaderResource = true; // Note: isShaderResource is initialized to 'true' for backward compatibility
+        bool isShaderResource = true; ///< True if usable as a shader resource (default true for backward compatibility).
         bool isRenderTarget = false;
         bool isUAV = false;
         bool isTypeless = false;
@@ -146,9 +227,11 @@ namespace nvrhi
 
         SharedResourceFlags sharedResourceFlags = SharedResourceFlags::None;
 
-        // Indicates that the texture is created with no backing memory,
-        // and memory is bound to the texture later using bindTextureMemory.
-        // On DX12, the texture resource is created at the time of memory binding.
+        /**
+         * @brief If true, the texture is created without backing memory; memory is bound later via bindTextureMemory.
+         *        On DX12, the texture resource is created only when memory is bound.
+         * @par 中文说明：虚拟纹理标志，内存稍后绑定。
+         */
         bool isVirtual = false;
         bool isTiled = false;
 
@@ -157,11 +240,15 @@ namespace nvrhi
 
         ResourceStates initialState = ResourceStates::Unknown;
 
-        // If keepInitialState is true, command lists that use the texture will automatically
-        // begin tracking the texture from the initial state and transition it to the initial state 
-        // on command list close.
+        /**
+         * @brief If true, command lists automatically track initial state and transition back to it on close.
+         * @par 中文说明：
+         *      若为 true，命令列表会自动从 initial 状态开始追踪纹理状态，
+         *      并在命令列表关闭时转换回该状态。
+         */
         bool keepInitialState = false;
 
+        // Setter methods (fluent interface)
         constexpr TextureDesc& setWidth(uint32_t value) { width = value; return *this; }
         constexpr TextureDesc& setHeight(uint32_t value) { height = value; return *this; }
         constexpr TextureDesc& setDepth(uint32_t value) { depth = value; return *this; }
@@ -181,8 +268,15 @@ namespace nvrhi
         constexpr TextureDesc& setInitialState(ResourceStates value) { initialState = value; return *this; }
         constexpr TextureDesc& setKeepInitialState(bool value) { keepInitialState = value; return *this; }
         constexpr TextureDesc& setSharedResourceFlags(SharedResourceFlags value) { sharedResourceFlags = value; return *this; }
-        
-        // Equivalent to .setInitialState(_initialState).setKeepInitialState(true)
+
+        /**
+         * @brief Convenience function to set initial state and enable automatic state tracking.
+         * @param _initialState The initial resource state.
+         * @return Reference to this descriptor.
+         *
+         * @par 中文说明：
+         *      等价于调用 .setInitialState(_initialState).setKeepInitialState(true)。
+         */
         constexpr TextureDesc& enableAutomaticStateTracking(ResourceStates _initialState)
         {
             initialState = _initialState;
@@ -191,16 +285,31 @@ namespace nvrhi
         }
     };
 
-    // Describes a 2D or 3D section of a single mip level, single array slice of a texture.
+    /**
+     * @struct TextureSlice
+     * @brief Describes a 2D or 3D sub-region within a single mip level and array slice.
+     *
+     * @par 中文说明：
+     *      描述单个 mip 级别、单个数组切片内的一个 2D 或 3D 子区域。
+     *      宽度、高度、深度默认值为 -1，表示使用纹理的整个维度（由 resolve() 解析为实际大小）。
+     */
     struct TextureSlice
     {
         uint32_t x = 0;
         uint32_t y = 0;
         uint32_t z = 0;
-        // -1 means the entire dimension is part of the region
-        // resolve() below will translate these values into actual dimensions
+        /**
+         * @brief Width of the slice; -1 means the entire dimension of the texture.
+         *        resolve() will translate -1 into actual dimensions.
+         */
         uint32_t width = uint32_t(-1);
+        /**
+         * @brief Height of the slice; -1 means the entire dimension of the texture.
+         */
         uint32_t height = uint32_t(-1);
+        /**
+         * @brief Depth of the slice; -1 means the entire dimension of the texture.
+         */
         uint32_t depth = uint32_t(-1);
 
         MipLevel mipLevel = 0;
@@ -217,11 +326,21 @@ namespace nvrhi
         constexpr TextureSlice& setArraySlice(ArraySlice slice) { arraySlice = slice; return *this; }
     };
 
+    /**
+     * @struct TextureSubresourceSet
+     * @brief Specifies a range of mip levels and array slices for texture views.
+     *
+     * Supports sentinel values AllMipLevels and AllArraySlices to denote the entire resource.
+     *
+     * @par 中文说明：
+     *      纹理子资源范围，用于视图创建。提供 AllMipLevels 和 AllArraySlices 哨兵值，
+     *      表示包含所有 mip 级别或所有数组切片。resolve() 方法将哨兵值转换为实际范围。
+     */
     struct TextureSubresourceSet
     {
         static constexpr MipLevel AllMipLevels = MipLevel(-1);
         static constexpr ArraySlice AllArraySlices = ArraySlice(-1);
-        
+
         MipLevel baseMipLevel = 0;
         MipLevel numMipLevels = 1;
         ArraySlice baseArraySlice = 0;
@@ -237,15 +356,25 @@ namespace nvrhi
         {
         }
 
+        /**
+         * @brief Resolves sentinel values to actual subresource counts based on the descriptor.
+         * @param desc Texture descriptor.
+         * @param singleMipLevel If true, treat the mip range as a single mip for views that require it.
+         * @return Resolved TextureSubresourceSet.
+         */
         [[nodiscard]] NVRHI_API TextureSubresourceSet resolve(const TextureDesc& desc, bool singleMipLevel) const;
+
+        /**
+         * @brief Checks if this subresource set covers the entire texture.
+         */
         [[nodiscard]] NVRHI_API bool isEntireTexture(const TextureDesc& desc) const;
 
         bool operator ==(const TextureSubresourceSet& other) const
         {
             return baseMipLevel == other.baseMipLevel &&
-                numMipLevels == other.numMipLevels &&
-                baseArraySlice == other.baseArraySlice &&
-                numArraySlices == other.numArraySlices;
+                   numMipLevels == other.numMipLevels &&
+                   baseArraySlice == other.baseArraySlice &&
+                   numArraySlices == other.numArraySlices;
         }
         bool operator !=(const TextureSubresourceSet& other) const { return !(*this == other); }
 
@@ -255,23 +384,49 @@ namespace nvrhi
         constexpr TextureSubresourceSet& setBaseArraySlice(ArraySlice value) { baseArraySlice = value; return *this; }
         constexpr TextureSubresourceSet& setNumArraySlices(ArraySlice value) { numArraySlices = value; return *this; }
         constexpr TextureSubresourceSet& setArraySlices(ArraySlice base, ArraySlice num) { baseArraySlice = base; numArraySlices = num; return *this; }
-
-        // see the bottom of this file for a specialization of std::hash<TextureSubresourceSet>
     };
 
+    /**
+     * @brief Predefined sentinel for all subresources.
+     */
     static const TextureSubresourceSet AllSubresources = TextureSubresourceSet(0, TextureSubresourceSet::AllMipLevels, 0, TextureSubresourceSet::AllArraySlices);
 
+    /**
+     * @class ITexture
+     * @brief Interface for a texture resource.
+     *
+     * @par 中文说明：
+     *      纹理资源接口，提供描述信息查询以及获取原生视图的能力。
+     */
     class ITexture : public IResource
     {
     public:
         [[nodiscard]] virtual const TextureDesc& getDesc() const = 0;
 
-        // Similar to getNativeObject, returns a native view for a specified set of subresources. Returns nullptr if unavailable.
-        // TODO: on D3D12, the views might become invalid later if the view heap is grown/reallocated, we should do something about that.
+        /**
+         * @brief Returns a native view for the specified subresource range and format.
+         * @param objectType Type of the native object requested.
+         * @param format Optional override format (UNKNOWN = use texture's format).
+         * @param subresources Subresource range (default AllSubresources).
+         * @param dimension Optional override dimension (Unknown = use texture's dimension).
+         * @param isReadOnlyDSV If true, request a read-only depth-stencil view.
+         * @return Native object handle, or nullptr if unavailable.
+         *
+         * @par 中文说明：
+         *      获取指定子资源范围、格式、维度的原生视图对象。如果无法提供则返回 nullptr。
+         *      注意：在 D3D12 中，若视图堆增长或重分配，返回的视图可能失效。
+         */
         virtual Object getNativeView(ObjectType objectType, Format format = Format::UNKNOWN, TextureSubresourceSet subresources = AllSubresources, TextureDimension dimension = TextureDimension::Unknown, bool isReadOnlyDSV = false) = 0;
     };
     typedef RefCountPtr<ITexture> TextureHandle;
 
+    /**
+     * @class IStagingTexture
+     * @brief Interface for a staging texture used for CPU read/write.
+     *
+     * @par 中文说明：
+     *      用于 CPU 读写操作的临时纹理，仅作为数据传输中介。
+     */
     class IStagingTexture : public IResource
     {
     public:
@@ -312,7 +467,7 @@ namespace nvrhi
         uint32_t numTilesForPackedMips = 0;
         uint32_t startTileIndexInOverallResource = 0;
     };
-    
+
     struct TileShape
     {
         uint32_t widthInTexels = 0;
@@ -328,6 +483,13 @@ namespace nvrhi
         uint32_t startTileIndexInOverallResource = 0;
     };
 
+    /**
+     * @enum SamplerFeedbackFormat
+     * @brief Format for sampler feedback data (used in texture space shading).
+     *
+     * @par 中文说明：
+     *      采样器反馈数据的格式，用于纹理空间着色等特性。
+     */
     enum SamplerFeedbackFormat : uint8_t
     {
         MinMipOpaque = 0x0,
@@ -356,13 +518,21 @@ namespace nvrhi
     // Buffer
     //////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @struct BufferDesc
+     * @brief Descriptor for creating a buffer resource.
+     *
+     * @par 中文说明：
+     *      缓冲区创建描述结构，包含字节大小、步幅、用途标志、初始状态等。
+     *      支持易失性缓冲区、虚拟缓冲区、自动状态跟踪等特性。
+     */
     struct BufferDesc
     {
         uint64_t byteSize = 0;
-        uint32_t structStride = 0; // if non-zero it's structured
-        uint32_t maxVersions = 0; // only valid and required to be nonzero for volatile buffers on Vulkan
+        uint32_t structStride = 0;        ///< If non-zero, the buffer is a structured buffer.
+        uint32_t maxVersions = 0;         ///< Non-zero only for volatile buffers on Vulkan.
         std::string debugName;
-        Format format = Format::UNKNOWN; // for typed buffer views
+        Format format = Format::UNKNOWN;  ///< Format for typed buffer views.
         bool canHaveUAVs = false;
         bool canHaveTypedViews = false;
         bool canHaveRawViews = false;
@@ -374,27 +544,19 @@ namespace nvrhi
         bool isAccelStructStorage = false;
         bool isShaderBindingTable = false;
 
-        // A dynamic/upload buffer whose contents only live in the current command list
-        bool isVolatile = false;
-
-        // Indicates that the buffer is created with no backing memory,
-        // and memory is bound to the buffer later using bindBufferMemory.
-        // On DX12, the buffer resource is created at the time of memory binding.
-        bool isVirtual = false;
+        bool isVolatile = false;          ///< Dynamic/upload buffer whose contents only live in the current command list.
+        bool isVirtual = false;           ///< Created without backing memory; memory is bound later.
 
         ResourceStates initialState = ResourceStates::Common;
-
-        // see TextureDesc::keepInitialState
-        bool keepInitialState = false;
+        bool keepInitialState = false;    ///< See TextureDesc::keepInitialState.
 
         CpuAccessMode cpuAccess = CpuAccessMode::None;
-
         SharedResourceFlags sharedResourceFlags = SharedResourceFlags::None;
 
         constexpr BufferDesc& setByteSize(uint64_t value) { byteSize = value; return *this; }
         constexpr BufferDesc& setStructStride(uint32_t value) { structStride = value; return *this; }
         constexpr BufferDesc& setMaxVersions(uint32_t value) { maxVersions = value; return *this; }
-                  BufferDesc& setDebugName(const std::string& value) { debugName = value; return *this; }
+        BufferDesc& setDebugName(const std::string& value) { debugName = value; return *this; }
         constexpr BufferDesc& setFormat(Format value) { format = value; return *this; }
         constexpr BufferDesc& setCanHaveUAVs(bool value) { canHaveUAVs = value; return *this; }
         constexpr BufferDesc& setCanHaveTypedViews(bool value) { canHaveTypedViews = value; return *this; }
@@ -412,7 +574,9 @@ namespace nvrhi
         constexpr BufferDesc& setKeepInitialState(bool value) { keepInitialState = value; return *this; }
         constexpr BufferDesc& setCpuAccess(CpuAccessMode value) { cpuAccess = value; return *this; }
 
-        // Equivalent to .setInitialState(_initialState).setKeepInitialState(true)
+        /**
+         * @brief Equivalent to .setInitialState(_initialState).setKeepInitialState(true)
+         */
         constexpr BufferDesc& enableAutomaticStateTracking(ResourceStates _initialState)
         {
             initialState = _initialState;
@@ -421,17 +585,25 @@ namespace nvrhi
         }
     };
 
+    /**
+     * @struct BufferRange
+     * @brief Specifies a byte range within a buffer.
+     *
+     * @par 中文说明：
+     *      缓冲区的字节范围，用于视图或拷贝操作。
+     */
     struct BufferRange
     {
         uint64_t byteOffset = 0;
         uint64_t byteSize = 0;
-        
+
         BufferRange() = default;
 
         BufferRange(uint64_t _byteOffset, uint64_t _byteSize)
             : byteOffset(_byteOffset)
             , byteSize(_byteSize)
-        { }
+        {
+        }
 
         [[nodiscard]] NVRHI_API BufferRange resolve(const BufferDesc& desc) const;
         [[nodiscard]] constexpr bool isEntireBuffer(const BufferDesc& desc) const { return (byteOffset == 0) && (byteSize == ~0ull || byteSize == desc.byteSize); }
@@ -441,8 +613,18 @@ namespace nvrhi
         constexpr BufferRange& setByteSize(uint64_t value) { byteSize = value; return *this; }
     };
 
+    /**
+     * @brief Sentinel BufferRange representing the entire buffer.
+     */
     static const BufferRange EntireBuffer = BufferRange(0, ~0ull);
 
+    /**
+     * @class IBuffer
+     * @brief Interface for a GPU buffer resource.
+     *
+     * @par 中文说明：
+     *      GPU 缓冲区资源接口，可获取描述信息和 GPU 虚拟地址。
+     */
     class IBuffer : public IResource
     {
     public:
@@ -456,6 +638,15 @@ namespace nvrhi
     // Sampler
     //////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @enum SamplerAddressMode
+     * @brief Texture addressing mode.
+     *
+     * Provides both D3D and Vulkan naming conventions.
+     *
+     * @par 中文说明：
+     *      纹理寻址模式，如钳位、重复、镜像等。同时提供 D3D 和 Vulkan 命名。
+     */
     enum class SamplerAddressMode : uint8_t
     {
         // D3D names
@@ -473,6 +664,13 @@ namespace nvrhi
         MirrorClampToEdge = MirrorOnce
     };
 
+    /**
+     * @enum SamplerReductionType
+     * @brief Sampler reduction mode (e.g., min/max filtering).
+     *
+     * @par 中文说明：
+     *      采样器缩减类型，如标准、比较、最小值、最大值。
+     */
     enum class SamplerReductionType : uint8_t
     {
         Standard,
@@ -481,6 +679,13 @@ namespace nvrhi
         Maximum
     };
 
+    /**
+     * @struct SamplerDesc
+     * @brief Description for creating a sampler resource.
+     *
+     * @par 中文说明：
+     *      采样器创建描述结构，包含过滤方式、寻址模式、各向异性等参数。
+     */
     struct SamplerDesc
     {
         Color borderColor = 1.f;
@@ -509,6 +714,10 @@ namespace nvrhi
         SamplerDesc& setReductionType(SamplerReductionType type) { reductionType = type; return *this; }
     };
 
+    /**
+     * @class ISampler
+     * @brief Interface for a sampler resource.
+     */
     class ISampler : public IResource
     {
     public:
@@ -516,18 +725,25 @@ namespace nvrhi
     };
 
     typedef RefCountPtr<ISampler> SamplerHandle;
-    
+
     //////////////////////////////////////////////////////////////////////////
     // Framebuffer
     //////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @struct FramebufferAttachment
+     * @brief Describes a texture attachment in a framebuffer.
+     *
+     * @par 中文说明：
+     *      帧缓冲附件的描述，包含纹理指针、子资源范围、格式、只读标志等。
+     */
     struct FramebufferAttachment
     {
         ITexture* texture = nullptr;
         TextureSubresourceSet subresources = TextureSubresourceSet(0, 1, 0, 1);
         Format format = Format::UNKNOWN;
         bool isReadOnly = false;
-        
+
         constexpr FramebufferAttachment& setTexture(ITexture* t) { texture = t; return *this; }
         constexpr FramebufferAttachment& setSubresources(TextureSubresourceSet value) { subresources = value; return *this; }
         constexpr FramebufferAttachment& setArraySlice(ArraySlice index) { subresources.baseArraySlice = index; subresources.numArraySlices = 1; return *this; }
@@ -539,6 +755,13 @@ namespace nvrhi
         [[nodiscard]] bool valid() const { return texture != nullptr; }
     };
 
+    /**
+     * @struct FramebufferDesc
+     * @brief Descriptor for creating a framebuffer.
+     *
+     * @par 中文说明：
+     *      帧缓冲创建描述结构，包含颜色附件数组、深度附件、着色率附件。
+     */
     struct FramebufferDesc
     {
         static_vector<FramebufferAttachment, c_MaxRenderTargets> colorAttachments;
@@ -556,9 +779,16 @@ namespace nvrhi
         FramebufferDesc& setShadingRateAttachment(ITexture* texture, TextureSubresourceSet subresources) { shadingRateAttachment = FramebufferAttachment().setTexture(texture).setSubresources(subresources); return *this; }
     };
 
-    // Describes the parameters of a framebuffer that can be used to determine if a given framebuffer
-    // is compatible with a certain graphics or meshlet pipeline object. All fields of FramebufferInfo
-    // must match between the framebuffer and the pipeline for them to be compatible.
+    /**
+     * @struct FramebufferInfo
+     * @brief Compact description of a framebuffer for pipeline compatibility checks.
+     *
+     * Must match between the framebuffer and the pipeline object.
+     *
+     * @par 中文说明：
+     *      帧缓冲的紧凑描述，用于管线兼容性验证。颜色格式列表、深度格式、采样参数等
+     *      必须与管线对象一致。
+     */
     struct FramebufferInfo
     {
         static_vector<Format, c_MaxRenderTargets> colorFormats;
@@ -568,7 +798,7 @@ namespace nvrhi
 
         FramebufferInfo() = default;
         NVRHI_API FramebufferInfo(const FramebufferDesc& desc);
-        
+
         bool operator==(const FramebufferInfo& other) const
         {
             return formatsEqual(colorFormats, other.colorFormats)
@@ -592,7 +822,15 @@ namespace nvrhi
         }
     };
 
-    // An extended version of FramebufferInfo that also contains the framebuffer dimensions.
+    /**
+     * @struct FramebufferInfoEx
+     * @brief Extended FramebufferInfo including dimensions and array size.
+     *
+     * Provides a helper to construct a Viewport from its dimensions.
+     *
+     * @par 中文说明：
+     *      扩展帧缓冲信息，包含宽高及数组大小。可据此生成默认视口。
+     */
     struct FramebufferInfoEx : FramebufferInfo
     {
         uint32_t width = 0;
@@ -612,7 +850,14 @@ namespace nvrhi
         }
     };
 
-    class IFramebuffer : public IResource 
+    /**
+     * @class IFramebuffer
+     * @brief Interface for a framebuffer resource.
+     *
+     * @par 中文说明：
+     *      帧缓冲资源接口，可获取描述信息和扩展帧缓冲信息。
+     */
+    class IFramebuffer : public IResource
     {
     public:
         [[nodiscard]] virtual const FramebufferDesc& getDesc() const = 0;
@@ -620,44 +865,44 @@ namespace nvrhi
     };
 
     typedef RefCountPtr<IFramebuffer> FramebufferHandle;
-} // namespace nvrhi
+} // namespace helicon
 
 namespace std
 {
-    template<> struct hash<nvrhi::TextureSubresourceSet>
+    template<> struct hash<helicon::TextureSubresourceSet>
     {
-        std::size_t operator()(nvrhi::TextureSubresourceSet const& s) const noexcept
+        std::size_t operator()(helicon::TextureSubresourceSet const& s) const noexcept
         {
             size_t hash = 0;
-            nvrhi::hash_combine(hash, s.baseMipLevel);
-            nvrhi::hash_combine(hash, s.numMipLevels);
-            nvrhi::hash_combine(hash, s.baseArraySlice);
-            nvrhi::hash_combine(hash, s.numArraySlices);
+            helicon::hash_combine(hash, s.baseMipLevel);
+            helicon::hash_combine(hash, s.numMipLevels);
+            helicon::hash_combine(hash, s.baseArraySlice);
+            helicon::hash_combine(hash, s.numArraySlices);
             return hash;
         }
     };
 
-    template<> struct hash<nvrhi::BufferRange>
+    template<> struct hash<helicon::BufferRange>
     {
-        std::size_t operator()(nvrhi::BufferRange const& s) const noexcept
+        std::size_t operator()(helicon::BufferRange const& s) const noexcept
         {
             size_t hash = 0;
-            nvrhi::hash_combine(hash, s.byteOffset);
-            nvrhi::hash_combine(hash, s.byteSize);
+            helicon::hash_combine(hash, s.byteOffset);
+            helicon::hash_combine(hash, s.byteSize);
             return hash;
         }
     };
 
-    template<> struct hash<nvrhi::FramebufferInfo>
+    template<> struct hash<helicon::FramebufferInfo>
     {
-        std::size_t operator()(nvrhi::FramebufferInfo const& s) const noexcept
+        std::size_t operator()(helicon::FramebufferInfo const& s) const noexcept
         {
             size_t hash = 0;
             for (auto format : s.colorFormats)
-                nvrhi::hash_combine(hash, format);
-            nvrhi::hash_combine(hash, s.depthFormat);
-            nvrhi::hash_combine(hash, s.sampleCount);
-            nvrhi::hash_combine(hash, s.sampleQuality);
+                helicon::hash_combine(hash, format);
+            helicon::hash_combine(hash, s.depthFormat);
+            helicon::hash_combine(hash, s.sampleCount);
+            helicon::hash_combine(hash, s.sampleQuality);
             return hash;
         }
     };
