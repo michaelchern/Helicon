@@ -1,25 +1,16 @@
-// ============================================================================
-// @file        core.h
-// @brief 
-// @brief.zh
-// @project     Helicon
-// @author      Michael Chern <1216866818@qq.com>
-// @date        2026-04-23
-//
-// Copyright (c) 2025-2026 Michael Chern. All rights reserved.
-// ============================================================================
-
 #pragma once
 
-#include <cstdint>
+#include <array>
+#include <atomic>
+#include <cassert>
 #include <cmath>
-#include <cstring>
-#include <string>
-#include <vector>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <initializer_list>
+#include <type_traits>
+#include <utility>
 
-// ----------------------------------------------------------------------------
-// 枚举类位运算符支持宏
-// ----------------------------------------------------------------------------
 #define NVRHI_ENUM_CLASS_FLAG_OPERATORS(T) \
     inline T operator | (T a, T b) { return T(uint32_t(a) | uint32_t(b)); } \
     inline T operator & (T a, T b) { return T(uint32_t(a) & uint32_t(b)); } /* NOLINT(bugprone-macro-parentheses) */ \
@@ -28,9 +19,6 @@
     inline bool operator ==(T a, uint32_t b) { return uint32_t(a) == b; } \
     inline bool operator !=(T a, uint32_t b) { return uint32_t(a) != b; }
 
-// ----------------------------------------------------------------------------
-// 动态库导出 / 导入宏
-// ----------------------------------------------------------------------------
 #if defined(NVRHI_SHARED_LIBRARY_BUILD)
 #   if defined(_MSC_VER)
 #       define NVRHI_API __declspec(dllexport)
@@ -52,33 +40,23 @@
 
 namespace helicon
 {
-    /**
-     * @brief Increment this version number whenever any changes are made to the API.
-     * @par 中文说明：
-     *      当对 API 进行任何修改时，递增此版本号。
-     */
-    static constexpr uint32_t c_api_interface_version = 1;
+    // Version of the public API provided by NVRHI.
+    // Increment this when any changes to the API are made.
+    static constexpr uint32_t c_HeaderVersion = 23;
 
-    /**
-     * @brief Verifies that the implementation version matches the header version.
-     * @param version The interface version to check (defaults to c_api_interface_version).
-     * @return true if versions match, false otherwise.
-     *
-     * @par 中文说明：
-     *      验证实现版本是否与头文件版本匹配。
-     *      如果匹配则返回 true。当通过共享库使用 Helicon 初始化应用程序时，请调用此函数。
-     */
-    NVRHI_API bool verify_header_version(uint32_t version = c_api_interface_version);
+    // Verifies that the version of the implementation matches the version of the header.
+    // Returns true if they match. Use this when initializing apps using NVRHI as a shared library.
+    NVRHI_API bool verifyHeaderVersion(uint32_t version = c_HeaderVersion);
 
-    static constexpr uint32_t c_max_render_targets = 8;                       // 最大渲染目标数量
-    static constexpr uint32_t c_max_viewports = 16;                           // 最大视口数量
-    static constexpr uint32_t c_max_vertex_attributes = 16;                   // 最大顶点属性数量
-    static constexpr uint32_t c_max_binding_layouts = 8;                      // 最大绑定布局数量
-    static constexpr uint32_t c_max_bindless_register_spaces = 16;            // 最大无绑定寄存器空间数量
-    static constexpr uint32_t c_max_volatile_constant_buffers_per_layout = 6; // 每个布局最大易失常量缓冲区数量
-    static constexpr uint32_t c_max_volatile_constant_buffers = 32;           // 最大易失常量缓冲区总数
-    static constexpr uint32_t c_max_push_constant_size = 128;                 // D3D12：根签名最大为 256 字节，Vulkan：保证至少 128 字节的推送常量
-    static constexpr uint32_t c_constant_buffer_offset_size_alignment = 256;  // 部分绑定的常量缓冲区偏移必须对齐至此边界，大小必须为此值的倍数
+    static constexpr uint32_t c_MaxRenderTargets = 8;
+    static constexpr uint32_t c_MaxViewports = 16;
+    static constexpr uint32_t c_MaxVertexAttributes = 16;
+    static constexpr uint32_t c_MaxBindingLayouts = 8;
+    static constexpr uint32_t c_MaxBindlessRegisterSpaces = 16;
+    static constexpr uint32_t c_MaxVolatileConstantBuffersPerLayout = 6;
+    static constexpr uint32_t c_MaxVolatileConstantBuffers = 32;
+    static constexpr uint32_t c_MaxPushConstantSize = 128; // D3D12: root signature is 256 bytes max., Vulkan: 128 bytes of push constants guaranteed
+    static constexpr uint32_t c_ConstantBufferOffsetSizeAlignment = 256; // Partially bound constant buffers must have offsets aligned to this and sizes multiple of this
 
     //////////////////////////////////////////////////////////////////////////
     // Basic Types
@@ -88,9 +66,9 @@ namespace helicon
     {
         float r, g, b, a;
 
-        Color() : r(0.f), g(0.f), b(0.f), a(0.f) {}
-        Color(float c) : r(c), g(c), b(c), a(c) {}
-        Color(float _r, float _g, float _b, float _a) : r(_r), g(_g), b(_b), a(_a) {}
+        Color() : r(0.f), g(0.f), b(0.f), a(0.f) { }
+        Color(float c) : r(c), g(c), b(c), a(c) { }
+        Color(float _r, float _g, float _b, float _a) : r(_r), g(_g), b(_b), a(_a) { }
 
         bool operator ==(const Color& _b) const { return r == _b.r && g == _b.g && b == _b.b && a == _b.a; }
         bool operator !=(const Color& _b) const { return !(*this == _b); }
@@ -102,14 +80,13 @@ namespace helicon
         float minY, maxY;
         float minZ, maxZ;
 
-        Viewport() : minX(0.f), maxX(0.f), minY(0.f), maxY(0.f), minZ(0.f), maxZ(1.f) {}
+        Viewport() : minX(0.f), maxX(0.f), minY(0.f), maxY(0.f), minZ(0.f), maxZ(1.f) { }
 
-        Viewport(float width, float height) : minX(0.f), maxX(width), minY(0.f), maxY(height), minZ(0.f), maxZ(1.f) {}
+        Viewport(float width, float height) : minX(0.f), maxX(width), minY(0.f), maxY(height), minZ(0.f), maxZ(1.f) { }
 
         Viewport(float _minX, float _maxX, float _minY, float _maxY, float _minZ, float _maxZ)
             : minX(_minX), maxX(_maxX), minY(_minY), maxY(_maxY), minZ(_minZ), maxZ(_maxZ)
-        {
-        }
+        { }
 
         bool operator ==(const Viewport& b) const
         {
@@ -131,9 +108,9 @@ namespace helicon
         int minX, maxX;
         int minY, maxY;
 
-        Rect() : minX(0), maxX(0), minY(0), maxY(0) {}
-        Rect(int width, int height) : minX(0), maxX(width), minY(0), maxY(height) {}
-        Rect(int _minX, int _maxX, int _minY, int _maxY) : minX(_minX), maxX(_maxX), minY(_minY), maxY(_maxY) {}
+        Rect() : minX(0), maxX(0), minY(0), maxY(0) { }
+        Rect(int width, int height) : minX(0), maxX(width), minY(0), maxY(height) { }
+        Rect(int _minX, int _maxX, int _minY, int _maxY) : minX(_minX), maxX(_maxX), minY(_minY), maxY(_maxY) { }
         explicit Rect(const Viewport& viewport)
             : minX(int(floorf(viewport.minX)))
             , maxX(int(ceilf(viewport.maxX)))
@@ -158,131 +135,523 @@ namespace helicon
         VULKAN
     };
 
-    enum class Format : uint8_t
+
+// a static vector is a vector with a capacity defined at compile-time
+template <typename T, uint32_t _max_elements>
+struct static_vector : private std::array<T, _max_elements>
+{
+    typedef std::array<T, _max_elements> base;
+    enum { max_elements = _max_elements };
+
+    using typename base::value_type;
+    using typename base::size_type;
+    using typename base::difference_type;
+    using typename base::reference;
+    using typename base::const_reference;
+    using typename base::pointer;
+    using typename base::const_pointer;
+    using typename base::iterator;
+    using typename base::const_iterator;
+    // xxxnsubtil: reverse iterators not implemented
+
+    static_vector()
+        : base()
+        , current_size(0)
+    { }
+
+    static_vector(size_t size)
+        : base()
+        , current_size(size)
     {
-        UNKNOWN,
+        assert(size <= max_elements);
+    }
 
-        R8_UINT,
-        R8_SINT,
-        R8_UNORM,
-        R8_SNORM,
-        RG8_UINT,
-        RG8_SINT,
-        RG8_UNORM,
-        RG8_SNORM,
-        R16_UINT,
-        R16_SINT,
-        R16_UNORM,
-        R16_SNORM,
-        R16_FLOAT,
-        BGRA4_UNORM,
-        B5G6R5_UNORM,
-        B5G5R5A1_UNORM,
-        RGBA8_UINT,
-        RGBA8_SINT,
-        RGBA8_UNORM,
-        RGBA8_SNORM,
-        BGRA8_UNORM,
-        BGRX8_UNORM,
-        SRGBA8_UNORM,
-        SBGRA8_UNORM,
-        SBGRX8_UNORM,
-        R10G10B10A2_UNORM,
-        R11G11B10_FLOAT,
-        RG16_UINT,
-        RG16_SINT,
-        RG16_UNORM,
-        RG16_SNORM,
-        RG16_FLOAT,
-        R32_UINT,
-        R32_SINT,
-        R32_FLOAT,
-        RGBA16_UINT,
-        RGBA16_SINT,
-        RGBA16_FLOAT,
-        RGBA16_UNORM,
-        RGBA16_SNORM,
-        RG32_UINT,
-        RG32_SINT,
-        RG32_FLOAT,
-        RGB32_UINT,
-        RGB32_SINT,
-        RGB32_FLOAT,
-        RGBA32_UINT,
-        RGBA32_SINT,
-        RGBA32_FLOAT,
+    static_vector(std::initializer_list<T> il)
+        : current_size(0)
+    {
+        for(auto i : il)
+            push_back(i);
+    }
 
-        D16,
-        D24S8,
-        X24G8_UINT,
-        D32,
-        D32S8,
-        X32G8_UINT,
+    using base::at;
 
-        BC1_UNORM,
-        BC1_UNORM_SRGB,
-        BC2_UNORM,
-        BC2_UNORM_SRGB,
-        BC3_UNORM,
-        BC3_UNORM_SRGB,
-        BC4_UNORM,
-        BC4_SNORM,
-        BC5_UNORM,
-        BC5_SNORM,
-        BC6H_UFLOAT,
-        BC6H_SFLOAT,
-        BC7_UNORM,
-        BC7_UNORM_SRGB,
+    reference operator[] (size_type pos)
+    {
+        assert(pos < current_size);
+        return base::operator[](pos);
+    }
 
-        COUNT,
+    const_reference operator[] (size_type pos) const
+    {
+        assert(pos < current_size);
+        return base::operator[](pos);
+    }
+
+    using base::front;
+
+    reference back() noexcept                   { auto tmp =  end(); --tmp; return *tmp; }
+    const_reference back() const noexcept       { auto tmp = cend(); --tmp; return *tmp; }
+
+    using base::data;
+    using base::begin;
+    using base::cbegin;
+
+    iterator end() noexcept                     { return iterator(begin()) + current_size; }
+    const_iterator end() const noexcept         { return cend(); }
+    const_iterator cend() const noexcept        { return const_iterator(cbegin()) + current_size; }
+
+    bool empty() const noexcept                 { return current_size == 0; }
+    size_t size() const noexcept                { return current_size; }
+    constexpr size_t max_size() const noexcept  { return max_elements; }
+
+    void fill(const T& value) noexcept
+    {
+        base::fill(value);
+        current_size = max_elements;
+    }
+
+    void swap(static_vector& other) noexcept
+    {
+        base::swap(*this);
+        std::swap(current_size, other.current_size);
+    }
+
+    void push_back(const T& value) noexcept
+    {
+        assert(current_size < max_elements);
+        *(data() + current_size) = value;
+        current_size++;
+    }
+
+    void push_back(T&& value) noexcept
+    {
+        assert(current_size < max_elements);
+        *(data() + current_size) = std::move(value);
+        current_size++;
+    }
+
+    void pop_back() noexcept
+    {
+        assert(current_size > 0);
+        current_size--;
+    }
+
+    void resize(size_type new_size) noexcept
+    {
+        assert(new_size <= max_elements);
+
+        if (current_size > new_size)
+        {
+            for (size_type i = new_size; i < current_size; i++)
+                *(data() + i) = T{};
+        }
+        else
+        {
+            for (size_type i = current_size; i < new_size; i++)
+                *(data() + i) = T{};
+        }
+
+        current_size = new_size;
+    }
+
+    reference emplace_back() noexcept
+    {
+        assert(current_size < max_elements);
+        ++current_size;
+        back() = T{};
+        return back();
+    }
+
+private:
+    size_type current_size = 0;
+};
+
+    typedef uint32_t ObjectType;
+
+    // ObjectTypes namespace contains identifiers for various object types. 
+    // All constants have to be distinct. Implementations of NVRHI may extend the list.
+    //
+    // The encoding is chosen to minimize potential conflicts between implementations.
+    // 0x00aabbcc, where:
+    //   aa is GAPI, 1 for D3D11, 2 for D3D12, 3 for VK
+    //   bb is layer, 0 for native GAPI objects, 1 for reference NVRHI backend, 2 for user-defined backends
+    //   cc is a sequential number
+
+    namespace ObjectTypes
+    {
+        constexpr ObjectType SharedHandle                           = 0x00000001;
+
+        constexpr ObjectType D3D11_Device                           = 0x00010001;
+        constexpr ObjectType D3D11_DeviceContext                    = 0x00010002;
+        constexpr ObjectType D3D11_Resource                         = 0x00010003;
+        constexpr ObjectType D3D11_Buffer                           = 0x00010004;
+        constexpr ObjectType D3D11_RenderTargetView                 = 0x00010005;
+        constexpr ObjectType D3D11_DepthStencilView                 = 0x00010006;
+        constexpr ObjectType D3D11_ShaderResourceView               = 0x00010007;
+        constexpr ObjectType D3D11_UnorderedAccessView              = 0x00010008;
+
+        constexpr ObjectType D3D12_Device                           = 0x00020001;
+        constexpr ObjectType D3D12_CommandQueue                     = 0x00020002;
+        constexpr ObjectType D3D12_GraphicsCommandList              = 0x00020003;
+        constexpr ObjectType D3D12_Resource                         = 0x00020004;
+        constexpr ObjectType D3D12_RenderTargetViewDescriptor       = 0x00020005;
+        constexpr ObjectType D3D12_DepthStencilViewDescriptor       = 0x00020006;
+        constexpr ObjectType D3D12_ShaderResourceViewGpuDescripror  = 0x00020007;
+        constexpr ObjectType D3D12_UnorderedAccessViewGpuDescripror = 0x00020008;
+        constexpr ObjectType D3D12_RootSignature                    = 0x00020009;
+        constexpr ObjectType D3D12_PipelineState                    = 0x0002000a;
+        constexpr ObjectType D3D12_CommandAllocator                 = 0x0002000b;
+
+        constexpr ObjectType VK_Device                              = 0x00030001;
+        constexpr ObjectType VK_PhysicalDevice                      = 0x00030002;
+        constexpr ObjectType VK_Instance                            = 0x00030003;
+        constexpr ObjectType VK_Queue                               = 0x00030004;
+        constexpr ObjectType VK_CommandBuffer                       = 0x00030005;
+        constexpr ObjectType VK_DeviceMemory                        = 0x00030006;
+        constexpr ObjectType VK_Buffer                              = 0x00030007;
+        constexpr ObjectType VK_Image                               = 0x00030008;
+        constexpr ObjectType VK_ImageView                           = 0x00030009;
+        constexpr ObjectType VK_AccelerationStructureKHR            = 0x0003000a;
+        constexpr ObjectType VK_Sampler                             = 0x0003000b;
+        constexpr ObjectType VK_ShaderModule                        = 0x0003000c;
+        [[deprecated]]
+        constexpr ObjectType VK_RenderPass                          = 0x0003000d;
+        [[deprecated]]
+        constexpr ObjectType VK_Framebuffer                         = 0x0003000e;
+        constexpr ObjectType VK_DescriptorPool                      = 0x0003000f;
+        constexpr ObjectType VK_DescriptorSetLayout                 = 0x00030010;
+        constexpr ObjectType VK_DescriptorSet                       = 0x00030011;
+        constexpr ObjectType VK_PipelineLayout                      = 0x00030012;
+        constexpr ObjectType VK_Pipeline                            = 0x00030013;
+        constexpr ObjectType VK_Micromap                            = 0x00030014;
+        constexpr ObjectType VK_ImageCreateInfo                     = 0x00030015;
     };
 
-    enum class FormatKind : uint8_t
+    struct Object
     {
-        Integer,
-        Normalized,
-        Float,
-        DepthStencil
+        union {
+            uint64_t integer;
+            void* pointer;
+        };
+
+        Object(uint64_t i) : integer(i) { }  // NOLINT(cppcoreguidelines-pro-type-member-init)
+        Object(void* p) : pointer(p) { }     // NOLINT(cppcoreguidelines-pro-type-member-init)
+
+        template<typename T> operator T* () const { return static_cast<T*>(pointer); }
     };
 
-    struct FormatInfo
+    class IResource
     {
-        Format format;
-        const char* name;
-        uint8_t bytesPerBlock;
-        uint8_t blockSize;
-        FormatKind kind;
-        bool hasRed : 1;
-        bool hasGreen : 1;
-        bool hasBlue : 1;
-        bool hasAlpha : 1;
-        bool hasDepth : 1;
-        bool hasStencil : 1;
-        bool isSigned : 1;
-        bool isSRGB : 1;
+    protected:
+        IResource() = default;
+        virtual ~IResource() = default;
+
+    public:
+        virtual unsigned long AddRef() = 0;
+        virtual unsigned long Release() = 0;
+        virtual unsigned long GetRefCount() = 0;
+
+        // Returns a native object or interface, for example ID3D11Device*, or nullptr if the requested interface is unavailable.
+        // Does *not* AddRef the returned interface.
+        virtual Object getNativeObject(ObjectType objectType) { (void)objectType; return nullptr; }
+        
+        // Non-copyable and non-movable
+        IResource(const IResource&) = delete;
+        IResource(const IResource&&) = delete;
+        IResource& operator=(const IResource&) = delete;
+        IResource& operator=(const IResource&&) = delete;
     };
 
-    NVRHI_API const FormatInfo& getFormatInfo(Format format);
 
-    enum class FormatSupport : uint32_t
+    //////////////////////////////////////////////////////////////////////////
+    // RefCountPtr
+    // Mostly a copy of Microsoft::WRL::ComPtr<T>
+    //////////////////////////////////////////////////////////////////////////
+
+    template <typename T>
+    class RefCountPtr
     {
-        None = 0,
+    public:
+        typedef T InterfaceType;
 
-        Buffer = 0x00000001,
-        IndexBuffer = 0x00000002,
-        VertexBuffer = 0x00000004,
+        template <bool b, typename U = void>
+        struct EnableIf
+        {
+        };
 
-        Texture = 0x00000008,
-        DepthStencil = 0x00000010,
-        RenderTarget = 0x00000020,
-        Blendable = 0x00000040,
+        template <typename U>
+        struct EnableIf<true, U>
+        {
+            typedef U type;
+        };
 
-        ShaderLoad = 0x00000080,
-        ShaderSample = 0x00000100,
-        ShaderUavLoad = 0x00000200,
-        ShaderUavStore = 0x00000400,
-        ShaderAtomic = 0x00000800,
+    protected:
+        InterfaceType *ptr_;
+        template<class U> friend class RefCountPtr;
+
+        void InternalAddRef() const noexcept
+        {
+            if (ptr_ != nullptr)
+            {
+                ptr_->AddRef();
+            }
+        }
+
+        unsigned long InternalRelease() noexcept
+        {
+            unsigned long ref = 0;
+            T* temp = ptr_;
+
+            if (temp != nullptr)
+            {
+                ptr_ = nullptr;
+                ref = temp->Release();
+            }
+
+            return ref;
+        }
+
+    public:
+
+        RefCountPtr() noexcept : ptr_(nullptr)
+        {
+        }
+
+        RefCountPtr(std::nullptr_t) noexcept : ptr_(nullptr)
+        {
+        }
+
+        template<class U>
+        RefCountPtr(U *other) noexcept : ptr_(other)
+        {
+            InternalAddRef();
+        }
+
+        RefCountPtr(const RefCountPtr& other) noexcept : ptr_(other.ptr_)
+        {
+            InternalAddRef();
+        }
+
+        // copy ctor that allows to instanatiate class when U* is convertible to T*
+        template<class U>
+        RefCountPtr(const RefCountPtr<U> &other, typename std::enable_if<std::is_convertible<U*, T*>::value, void *>::type * = nullptr) noexcept :
+            ptr_(other.ptr_)
+        
+        {
+            InternalAddRef();
+        }
+
+        RefCountPtr(RefCountPtr &&other) noexcept : ptr_(nullptr)
+        {
+            if (this != reinterpret_cast<RefCountPtr*>(&reinterpret_cast<unsigned char&>(other)))
+            {
+                Swap(other);
+            }
+        }
+
+        // Move ctor that allows instantiation of a class when U* is convertible to T*
+        template<class U>
+        RefCountPtr(RefCountPtr<U>&& other, typename std::enable_if<std::is_convertible<U*, T*>::value, void *>::type * = nullptr) noexcept :
+            ptr_(other.ptr_)
+        {
+            other.ptr_ = nullptr;
+        }
+
+        ~RefCountPtr() noexcept
+        {
+            InternalRelease();
+        }
+
+        RefCountPtr& operator=(std::nullptr_t) noexcept
+        {
+            InternalRelease();
+            return *this;
+        }
+
+        RefCountPtr& operator=(T *other) noexcept
+        {
+            if (ptr_ != other)
+            {
+                RefCountPtr(other).Swap(*this);
+            }
+            return *this;
+        }
+
+        template <typename U>
+        RefCountPtr& operator=(U *other) noexcept
+        {
+            RefCountPtr(other).Swap(*this);
+            return *this;
+        }
+
+        RefCountPtr& operator=(const RefCountPtr &other) noexcept  // NOLINT(bugprone-unhandled-self-assignment)
+        {
+            if (ptr_ != other.ptr_)
+            {
+                RefCountPtr(other).Swap(*this);
+            }
+            return *this;
+        }
+
+        template<class U>
+        RefCountPtr& operator=(const RefCountPtr<U>& other) noexcept
+        {
+            RefCountPtr(other).Swap(*this);
+            return *this;
+        }
+
+        RefCountPtr& operator=(RefCountPtr &&other) noexcept
+        {
+            RefCountPtr(static_cast<RefCountPtr&&>(other)).Swap(*this);
+            return *this;
+        }
+
+        template<class U>
+        RefCountPtr& operator=(RefCountPtr<U>&& other) noexcept
+        {
+            RefCountPtr(static_cast<RefCountPtr<U>&&>(other)).Swap(*this);
+            return *this;
+        }
+
+        void Swap(RefCountPtr&& r) noexcept
+        {
+            T* tmp = ptr_;
+            ptr_ = r.ptr_;
+            r.ptr_ = tmp;
+        }
+
+        void Swap(RefCountPtr& r) noexcept
+        {
+            T* tmp = ptr_;
+            ptr_ = r.ptr_;
+            r.ptr_ = tmp;
+        }
+
+        [[nodiscard]] T* Get() const noexcept
+        {
+            return ptr_;
+        }
+        
+        operator T*() const
+        {
+            return ptr_;
+        }
+
+        InterfaceType* operator->() const noexcept
+        {
+            return ptr_;
+        }
+
+        T** operator&()   // NOLINT(google-runtime-operator)
+        {
+            return &ptr_;
+        }
+
+        [[nodiscard]] T* const* GetAddressOf() const noexcept
+        {
+            return &ptr_;
+        }
+
+        [[nodiscard]] T** GetAddressOf() noexcept
+        {
+            return &ptr_;
+        }
+
+        [[nodiscard]] T** ReleaseAndGetAddressOf() noexcept
+        {
+            InternalRelease();
+            return &ptr_;
+        }
+
+        T* Detach() noexcept
+        {
+            T* ptr = ptr_;
+            ptr_ = nullptr;
+            return ptr;
+        }
+
+        // Set the pointer while keeping the object's reference count unchanged
+        void Attach(InterfaceType* other)
+        {
+            if (ptr_ != nullptr)
+            {
+                auto ref = ptr_->Release();
+                (void)ref;
+
+                // Attaching to the same object only works if duplicate references are being coalesced. Otherwise
+                // re-attaching will cause the pointer to be released and may cause a crash on a subsequent dereference.
+                assert(ref != 0 || ptr_ != other);
+            }
+
+            ptr_ = other;
+        }
+
+        // Create a wrapper around a raw object while keeping the object's reference count unchanged
+        static RefCountPtr<T> Create(T* other)
+        {
+            RefCountPtr<T> Ptr;
+            Ptr.Attach(other);
+            return Ptr;
+        }
+
+        unsigned long Reset()
+        {
+            return InternalRelease();
+        }
+    };    // RefCountPtr
+
+    typedef RefCountPtr<IResource> ResourceHandle;
+
+    //////////////////////////////////////////////////////////////////////////
+    // RefCounter<T>
+    // A class that implements reference counting in a way compatible with RefCountPtr.
+    // Intended usage is to use it as a base class for interface implementations, like so:
+    // class Texture : public RefCounter<ITexture> { ... }
+    //////////////////////////////////////////////////////////////////////////
+
+    template<class T>
+    class RefCounter : public T
+    {
+    private:
+        std::atomic<unsigned long> m_refCount = 1;
+    public:
+        virtual unsigned long AddRef() override 
+        {
+            return ++m_refCount;
+        }
+
+        virtual unsigned long Release() override
+        {
+            unsigned long result = --m_refCount;
+            if (result == 0) {
+                delete this;
+            }
+            return result;
+        }
+
+        virtual unsigned long GetRefCount() override 
+        {
+            return m_refCount.load();
+        }
     };
 
-    NVRHI_ENUM_CLASS_FLAG_OPERATORS(FormatSupport)
+    template <class T>
+    void hash_combine(size_t& seed, const T& v)
+    {
+        std::hash<T> hasher;
+        seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    }
+
+} // namespace nvrhi
+
+namespace std
+{
+    template<typename T> struct hash<nvrhi::RefCountPtr<T>>
+    {
+        std::size_t operator()(nvrhi::RefCountPtr<T> const& s) const noexcept
+        {
+            std::hash<T*> hash;
+            return hash(s.Get());
+        }
+    };
 }

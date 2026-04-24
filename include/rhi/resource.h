@@ -1,30 +1,12 @@
-/*
-* Copyright (c) 2014-2021, NVIDIA CORPORATION. All rights reserved.
-*
-* Permission is hereby granted, free of charge, to any person obtaining a
-* copy of this software and associated documentation files (the "Software"),
-* to deal in the Software without restriction, including without limitation
-* the rights to use, copy, modify, merge, publish, distribute, sublicense,
-* and/or sell copies of the Software, and to permit persons to whom the
-* Software is furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
-* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-* FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-* DEALINGS IN THE SOFTWARE.
-*/
-
 #pragma once
 
-#include <rhi/core.h>
+#include <nvrhi/abi.h>
+#include <nvrhi/format.h>
 
-namespace helicon
+#include <string>
+#include <vector>
+
+namespace nvrhi
 {
     //////////////////////////////////////////////////////////////////////////
     // Heap
@@ -45,7 +27,7 @@ namespace helicon
 
         constexpr HeapDesc& setCapacity(uint64_t value) { capacity = value; return *this; }
         constexpr HeapDesc& setType(HeapType value) { type = value; return *this; }
-        HeapDesc& setDebugName(const std::string& value) { debugName = value; return *this; }
+                  HeapDesc& setDebugName(const std::string& value) { debugName = value; return *this; }
     };
 
     class IHeap : public IResource
@@ -471,4 +453,212 @@ namespace helicon
     typedef RefCountPtr<IBuffer> BufferHandle;
 
     //////////////////////////////////////////////////////////////////////////
+    // Sampler
+    //////////////////////////////////////////////////////////////////////////
+
+    enum class SamplerAddressMode : uint8_t
+    {
+        // D3D names
+        Clamp,
+        Wrap,
+        Border,
+        Mirror,
+        MirrorOnce,
+
+        // Vulkan names
+        ClampToEdge = Clamp,
+        Repeat = Wrap,
+        ClampToBorder = Border,
+        MirroredRepeat = Mirror,
+        MirrorClampToEdge = MirrorOnce
+    };
+
+    enum class SamplerReductionType : uint8_t
+    {
+        Standard,
+        Comparison,
+        Minimum,
+        Maximum
+    };
+
+    struct SamplerDesc
+    {
+        Color borderColor = 1.f;
+        float maxAnisotropy = 1.f;
+        float mipBias = 0.f;
+
+        bool minFilter = true;
+        bool magFilter = true;
+        bool mipFilter = true;
+        SamplerAddressMode addressU = SamplerAddressMode::Clamp;
+        SamplerAddressMode addressV = SamplerAddressMode::Clamp;
+        SamplerAddressMode addressW = SamplerAddressMode::Clamp;
+        SamplerReductionType reductionType = SamplerReductionType::Standard;
+
+        SamplerDesc& setBorderColor(const Color& color) { borderColor = color; return *this; }
+        SamplerDesc& setMaxAnisotropy(float value) { maxAnisotropy = value; return *this; }
+        SamplerDesc& setMipBias(float value) { mipBias = value; return *this; }
+        SamplerDesc& setMinFilter(bool enable) { minFilter = enable; return *this; }
+        SamplerDesc& setMagFilter(bool enable) { magFilter = enable; return *this; }
+        SamplerDesc& setMipFilter(bool enable) { mipFilter = enable; return *this; }
+        SamplerDesc& setAllFilters(bool enable) { minFilter = magFilter = mipFilter = enable; return *this; }
+        SamplerDesc& setAddressU(SamplerAddressMode mode) { addressU = mode; return *this; }
+        SamplerDesc& setAddressV(SamplerAddressMode mode) { addressV = mode; return *this; }
+        SamplerDesc& setAddressW(SamplerAddressMode mode) { addressW = mode; return *this; }
+        SamplerDesc& setAllAddressModes(SamplerAddressMode mode) { addressU = addressV = addressW = mode; return *this; }
+        SamplerDesc& setReductionType(SamplerReductionType type) { reductionType = type; return *this; }
+    };
+
+    class ISampler : public IResource
+    {
+    public:
+        [[nodiscard]] virtual const SamplerDesc& getDesc() const = 0;
+    };
+
+    typedef RefCountPtr<ISampler> SamplerHandle;
+    
+    //////////////////////////////////////////////////////////////////////////
+    // Framebuffer
+    //////////////////////////////////////////////////////////////////////////
+
+    struct FramebufferAttachment
+    {
+        ITexture* texture = nullptr;
+        TextureSubresourceSet subresources = TextureSubresourceSet(0, 1, 0, 1);
+        Format format = Format::UNKNOWN;
+        bool isReadOnly = false;
+        
+        constexpr FramebufferAttachment& setTexture(ITexture* t) { texture = t; return *this; }
+        constexpr FramebufferAttachment& setSubresources(TextureSubresourceSet value) { subresources = value; return *this; }
+        constexpr FramebufferAttachment& setArraySlice(ArraySlice index) { subresources.baseArraySlice = index; subresources.numArraySlices = 1; return *this; }
+        constexpr FramebufferAttachment& setArraySliceRange(ArraySlice index, ArraySlice count) { subresources.baseArraySlice = index; subresources.numArraySlices = count; return *this; }
+        constexpr FramebufferAttachment& setMipLevel(MipLevel level) { subresources.baseMipLevel = level; subresources.numMipLevels = 1; return *this; }
+        constexpr FramebufferAttachment& setFormat(Format f) { format = f; return *this; }
+        constexpr FramebufferAttachment& setReadOnly(bool ro) { isReadOnly = ro; return *this; }
+
+        [[nodiscard]] bool valid() const { return texture != nullptr; }
+    };
+
+    struct FramebufferDesc
+    {
+        static_vector<FramebufferAttachment, c_MaxRenderTargets> colorAttachments;
+        FramebufferAttachment depthAttachment;
+        FramebufferAttachment shadingRateAttachment;
+
+        FramebufferDesc& addColorAttachment(const FramebufferAttachment& a) { colorAttachments.push_back(a); return *this; }
+        FramebufferDesc& addColorAttachment(ITexture* texture) { colorAttachments.push_back(FramebufferAttachment().setTexture(texture)); return *this; }
+        FramebufferDesc& addColorAttachment(ITexture* texture, TextureSubresourceSet subresources) { colorAttachments.push_back(FramebufferAttachment().setTexture(texture).setSubresources(subresources)); return *this; }
+        FramebufferDesc& setDepthAttachment(const FramebufferAttachment& d) { depthAttachment = d; return *this; }
+        FramebufferDesc& setDepthAttachment(ITexture* texture) { depthAttachment = FramebufferAttachment().setTexture(texture); return *this; }
+        FramebufferDesc& setDepthAttachment(ITexture* texture, TextureSubresourceSet subresources) { depthAttachment = FramebufferAttachment().setTexture(texture).setSubresources(subresources); return *this; }
+        FramebufferDesc& setShadingRateAttachment(const FramebufferAttachment& d) { shadingRateAttachment = d; return *this; }
+        FramebufferDesc& setShadingRateAttachment(ITexture* texture) { shadingRateAttachment = FramebufferAttachment().setTexture(texture); return *this; }
+        FramebufferDesc& setShadingRateAttachment(ITexture* texture, TextureSubresourceSet subresources) { shadingRateAttachment = FramebufferAttachment().setTexture(texture).setSubresources(subresources); return *this; }
+    };
+
+    // Describes the parameters of a framebuffer that can be used to determine if a given framebuffer
+    // is compatible with a certain graphics or meshlet pipeline object. All fields of FramebufferInfo
+    // must match between the framebuffer and the pipeline for them to be compatible.
+    struct FramebufferInfo
+    {
+        static_vector<Format, c_MaxRenderTargets> colorFormats;
+        Format depthFormat = Format::UNKNOWN;
+        uint32_t sampleCount = 1;
+        uint32_t sampleQuality = 0;
+
+        FramebufferInfo() = default;
+        NVRHI_API FramebufferInfo(const FramebufferDesc& desc);
+        
+        bool operator==(const FramebufferInfo& other) const
+        {
+            return formatsEqual(colorFormats, other.colorFormats)
+                && depthFormat == other.depthFormat
+                && sampleCount == other.sampleCount
+                && sampleQuality == other.sampleQuality;
+        }
+        bool operator!=(const FramebufferInfo& other) const { return !(*this == other); }
+
+        FramebufferInfo& addColorFormat(Format format) { colorFormats.push_back(format); return *this; }
+        FramebufferInfo& setDepthFormat(Format format) { depthFormat = format; return *this; }
+        FramebufferInfo& setSampleCount(uint32_t count) { sampleCount = count; return *this; }
+        FramebufferInfo& setSampleQuality(uint32_t quality) { sampleQuality = quality; return *this; }
+
+    private:
+        static bool formatsEqual(const static_vector<Format, c_MaxRenderTargets>& a, const static_vector<Format, c_MaxRenderTargets>& b)
+        {
+            if (a.size() != b.size()) return false;
+            for (size_t i = 0; i < a.size(); i++) if (a[i] != b[i]) return false;
+            return true;
+        }
+    };
+
+    // An extended version of FramebufferInfo that also contains the framebuffer dimensions.
+    struct FramebufferInfoEx : FramebufferInfo
+    {
+        uint32_t width = 0;
+        uint32_t height = 0;
+        uint32_t arraySize = 1;
+
+        FramebufferInfoEx() = default;
+        NVRHI_API FramebufferInfoEx(const FramebufferDesc& desc);
+
+        FramebufferInfoEx& setWidth(uint32_t value) { width = value; return *this; }
+        FramebufferInfoEx& setHeight(uint32_t value) { height = value; return *this; }
+        FramebufferInfoEx& setArraySize(uint32_t value) { arraySize = value; return *this; }
+
+        [[nodiscard]] Viewport getViewport(float minZ = 0.f, float maxZ = 1.f) const
+        {
+            return Viewport(0.f, float(width), 0.f, float(height), minZ, maxZ);
+        }
+    };
+
+    class IFramebuffer : public IResource 
+    {
+    public:
+        [[nodiscard]] virtual const FramebufferDesc& getDesc() const = 0;
+        [[nodiscard]] virtual const FramebufferInfoEx& getFramebufferInfo() const = 0;
+    };
+
+    typedef RefCountPtr<IFramebuffer> FramebufferHandle;
+} // namespace nvrhi
+
+namespace std
+{
+    template<> struct hash<nvrhi::TextureSubresourceSet>
+    {
+        std::size_t operator()(nvrhi::TextureSubresourceSet const& s) const noexcept
+        {
+            size_t hash = 0;
+            nvrhi::hash_combine(hash, s.baseMipLevel);
+            nvrhi::hash_combine(hash, s.numMipLevels);
+            nvrhi::hash_combine(hash, s.baseArraySlice);
+            nvrhi::hash_combine(hash, s.numArraySlices);
+            return hash;
+        }
+    };
+
+    template<> struct hash<nvrhi::BufferRange>
+    {
+        std::size_t operator()(nvrhi::BufferRange const& s) const noexcept
+        {
+            size_t hash = 0;
+            nvrhi::hash_combine(hash, s.byteOffset);
+            nvrhi::hash_combine(hash, s.byteSize);
+            return hash;
+        }
+    };
+
+    template<> struct hash<nvrhi::FramebufferInfo>
+    {
+        std::size_t operator()(nvrhi::FramebufferInfo const& s) const noexcept
+        {
+            size_t hash = 0;
+            for (auto format : s.colorFormats)
+                nvrhi::hash_combine(hash, format);
+            nvrhi::hash_combine(hash, s.depthFormat);
+            nvrhi::hash_combine(hash, s.sampleCount);
+            nvrhi::hash_combine(hash, s.sampleQuality);
+            return hash;
+        }
+    };
 }
